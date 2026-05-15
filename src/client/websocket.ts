@@ -35,6 +35,18 @@ export interface EchoOptions {
     cluster?: string;
     /** Force WSS even when wsUrl uses ws://. Default infers from URL scheme. */
     forceTLS?: boolean;
+    /**
+     * H5: explicit ws (plaintext) port — overrides the value parsed from
+     * `wsUrl`. Use when Reverb listens on a different port for ws vs wss
+     * (typical when TLS terminates at a sidecar / ingress).
+     */
+    wsPort?: number;
+    /**
+     * H5: explicit wss (TLS) port — overrides the value parsed from
+     * `wsUrl`. Use when Reverb listens on a different port for ws vs wss
+     * (typical when TLS terminates at a sidecar / ingress).
+     */
+    wssPort?: number;
 }
 
 /**
@@ -63,7 +75,13 @@ export function createEcho(options: EchoOptions = {}): Echo<'reverb'> {
 
     const parsed = new URL(wsUrl);
     const wsHost = parsed.hostname;
-    const wsPort = parsed.port ? Number(parsed.port) : parsed.protocol === 'wss:' ? 443 : 80;
+    const parsedPort = parsed.port ? Number(parsed.port) : parsed.protocol === 'wss:' ? 443 : 80;
+    // H5: ws and wss ports may differ (TLS termination at sidecar/ingress).
+    // Default both to the value parsed from wsUrl, but allow explicit
+    // overrides — otherwise Pusher fails over to ws on a wss-only port
+    // (or vice versa) and silently never connects.
+    const wsPort = options.wsPort ?? parsedPort;
+    const wssPort = options.wssPort ?? parsedPort;
     const forceTLS = options.forceTLS ?? parsed.protocol === 'wss:';
 
     const basePath = options.basePath ?? readEnv(ENV.BASE_PATH) ?? '';
@@ -72,9 +90,15 @@ export function createEcho(options: EchoOptions = {}): Echo<'reverb'> {
             ? ''
             : (options.authEndpoint ?? `${basePath.replace(/\/$/, '')}/broadcasting/auth`);
 
-    // Provide Pusher globally — Echo expects it on window for the `pusher` broadcaster.
+    // H3: install Pusher on window only when missing. Overwriting silently
+    // breaks apps that vendor their own Pusher instance (e.g. when two
+    // bundles co-exist during a phased deploy, or when an app uses
+    // pusher-js for non-Reverb use cases alongside Reverb).
     if (typeof window !== 'undefined') {
-        (window as unknown as { Pusher: typeof Pusher }).Pusher = Pusher;
+        const w = window as unknown as { Pusher?: typeof Pusher };
+        if (!w.Pusher) {
+            w.Pusher = Pusher;
+        }
     }
 
     return new Echo({
@@ -82,7 +106,7 @@ export function createEcho(options: EchoOptions = {}): Echo<'reverb'> {
         key,
         wsHost,
         wsPort,
-        wssPort: wsPort,
+        wssPort,
         forceTLS,
         enabledTransports: ['ws', 'wss'],
         authEndpoint,
