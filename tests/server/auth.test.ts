@@ -110,6 +110,55 @@ describe('getServerAuthContext', () => {
         );
         expect(ctx.user).not.toBeNull();
     });
+
+    // H1: pin RS256, reject other algorithms even if signature is valid.
+    it('rejects HS256-signed token (algorithm allowlist)', async () => {
+        const { SignJWT } = await import('jose');
+        const hsKey = new TextEncoder().encode('shared-secret-for-test-only');
+        const now = Math.floor(Date.now() / 1000);
+        const token = await new SignJWT({ type: 'user', email: 'a@b.c' })
+            .setProtectedHeader({ alg: 'HS256' })
+            .setIssuer('abeon-auth')
+            .setAudience('abeon')
+            .setIssuedAt(now)
+            .setExpirationTime(now + 600)
+            .setSubject('1')
+            .setJti('j')
+            .sign(hsKey);
+        const ctx = await getServerAuthContext(cookieJar({ abeon_token: token }), { jwks });
+        expect(ctx.user).toBeNull();
+    });
+
+    // H2: onError fires when token is present but bad — NOT when missing.
+    it('onError NOT called when cookie is absent', async () => {
+        const errors: unknown[] = [];
+        await getServerAuthContext(cookieJar({}), {
+            jwks,
+            onError: (e) => errors.push(e),
+        });
+        expect(errors).toHaveLength(0);
+    });
+
+    it('onError called when token is expired', async () => {
+        const expired = await signUserToken({}, -10);
+        const errors: unknown[] = [];
+        await getServerAuthContext(cookieJar({ abeon_token: expired }), {
+            jwks,
+            onError: (e) => errors.push(e),
+        });
+        expect(errors).toHaveLength(1);
+    });
+
+    it('onError called when token type is "service" (wrong audience)', async () => {
+        const token = await signUserToken({ type: 'service' });
+        const errors: unknown[] = [];
+        const ctx = await getServerAuthContext(cookieJar({ abeon_token: token }), {
+            jwks,
+            onError: (e) => errors.push(e),
+        });
+        expect(ctx.user).toBeNull();
+        expect(errors).toHaveLength(1);
+    });
 });
 
 describe('refreshTokenIfExpired', () => {
@@ -176,5 +225,51 @@ describe('refreshTokenIfExpired', () => {
             },
         );
         expect(result.refreshed).toBe(false);
+    });
+
+    // H8: native Headers#getSetCookie returns separate cookies — verify split.
+    it('returns both Set-Cookie headers separately (no comma-collapse)', async () => {
+        const expiringSoon = await signUserToken({}, 10);
+        const fakeFetch: typeof fetch = async () => {
+            const h = new Headers();
+            h.append('set-cookie', 'abeon_token=A; HttpOnly; Path=/');
+            h.append('set-cookie', 'abeon_refresh=R; HttpOnly; Path=/');
+            return new Response(null, { status: 200, headers: h });
+        };
+        const result = await refreshTokenIfExpired(
+            cookieJar({ abeon_token: expiringSoon, abeon_refresh: 'old' }),
+            { authBaseUrl: 'http://auth.test', fetchImpl: fakeFetch },
+        );
+        expect(result.setCookieHeaders).toHaveLength(2);
+        expect(result.setCookieHeaders[0]).toMatch(/^abeon_token=/);
+        expect(result.setCookieHeaders[1]).toMatch(/^abeon_refresh=/);
+    });
+
+    // H6: CRLF in cookie value must be filtered out — header injection guard.
+    // Spec-compliant Headers rejects CR/LF on construction, so simulate a
+    // misbehaving upstream by returning a Response-like with a hand-rolled
+    // headers.getSetCookie().
+    it('filters out Set-Cookie headers that contain CR/LF', async () => {
+        const expiringSoon = await signUserToken({}, 10);
+        const fakeFetch: typeof fetch = async () => {
+            const fake = {
+                ok: true,
+                status: 200,
+                headers: {
+                    getSetCookie: () => [
+                        'abeon_token=clean; HttpOnly',
+                        'evil=\r\nX-Injected: yes; Path=/',
+                    ],
+                },
+            };
+            return fake as unknown as Response;
+        };
+        const result = await refreshTokenIfExpired(
+            cookieJar({ abeon_token: expiringSoon, abeon_refresh: 'r' }),
+            { authBaseUrl: 'http://auth.test', fetchImpl: fakeFetch },
+        );
+        expect(result.setCookieHeaders.every((c) => !/[\r\n]/.test(c))).toBe(true);
+        expect(result.setCookieHeaders).toContain('abeon_token=clean; HttpOnly');
+        expect(result.setCookieHeaders.some((c) => c.startsWith('evil='))).toBe(false);
     });
 });

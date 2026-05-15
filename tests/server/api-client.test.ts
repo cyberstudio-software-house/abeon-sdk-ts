@@ -124,4 +124,45 @@ describe('createServerApiClient', () => {
         const headers = calls[0]?.init.headers as Record<string, string>;
         expect(headers[HEADERS.AUTHORIZATION]).toBe('Bearer v');
     });
+
+    // H4: explicit Authorization passed via options.headers wins over the
+    // JWT-cookie fallback. Required for service-to-service calls that
+    // attach a system token, not the end-user's JWT.
+    it('preserves explicit Authorization header passed via options.headers', async () => {
+        const { impl, calls } = mockFetch();
+        const api = createServerApiClient(
+            cookieJar({ abeon_token: 'user-jwt' }),
+            undefined,
+            {
+                baseUrl: 'http://backend.test',
+                fetchImpl: impl,
+                headers: { Authorization: 'Bearer system-token' },
+            },
+        );
+        await api.get('/api/v1/internal/registry');
+        const headers = calls[0]?.init.headers as Record<string, string>;
+        expect(headers[HEADERS.AUTHORIZATION]).toBe('Bearer system-token');
+    });
+
+    // H4: case-insensitive — `authorization` (lowercase) still suppresses fallback.
+    it('respects explicit Authorization header case-insensitively', async () => {
+        const { impl, calls } = mockFetch();
+        const api = createServerApiClient(
+            cookieJar({ abeon_token: 'user-jwt' }),
+            undefined,
+            {
+                baseUrl: 'http://backend.test',
+                fetchImpl: impl,
+                headers: { authorization: 'Bearer system-token' },
+            },
+        );
+        await api.get('/x');
+        const headers = calls[0]?.init.headers as Record<string, string>;
+        // Whichever casing wins, the cookie's Bearer must NOT be present.
+        const allValues = Object.entries(headers)
+            .filter(([k]) => k.toLowerCase() === 'authorization')
+            .map(([, v]) => v);
+        expect(allValues).toContain('Bearer system-token');
+        expect(allValues).not.toContain('Bearer user-jwt');
+    });
 });

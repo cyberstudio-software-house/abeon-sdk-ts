@@ -237,4 +237,64 @@ describe('useNotifications', () => {
         expect(echo.leftChannels).toContain('user.42');
         expect(echo.listened.size).toBe(0);
     });
+
+    // M5: lightweight runtime validator drops payloads that lack the
+    // required string fields (contract drift, garbled message, etc).
+    it('ignores WS payloads missing required fields (M5)', async () => {
+        const { api } = recordingApi({
+            'GET /api/v1/notifications': { data: [] },
+            'GET /api/v1/notifications/unread-count': { data: { count: 0 } },
+        });
+        const echo = fakeEcho();
+        const { result } = renderHook(
+            () => useNotifications({ echo, autoLoad: false }),
+            { wrapper: wrap(api) },
+        );
+
+        act(() => {
+            echo.emit('NotificationCreated', { id: 'n1' }); // missing title/body/type
+        });
+        act(() => {
+            echo.emit('NotificationCreated', 'a string payload');
+        });
+        act(() => {
+            echo.emit('NotificationCreated', null);
+        });
+        expect(result.current.notifications).toHaveLength(0);
+        expect(result.current.unreadCount).toBe(0);
+    });
+
+    // M5: unwraps the `{ notification: ... }` envelope when present.
+    it('unwraps `{ notification: ... }` payload envelope', async () => {
+        const { api } = recordingApi({
+            'GET /api/v1/notifications': { data: [] },
+            'GET /api/v1/notifications/unread-count': { data: { count: 0 } },
+        });
+        const echo = fakeEcho();
+        const { result } = renderHook(
+            () => useNotifications({ echo, autoLoad: false }),
+            { wrapper: wrap(api) },
+        );
+
+        const wrapped = {
+            notification: {
+                id: 'n42',
+                user_id: 42,
+                type: 'crm.deal.won',
+                title: 'Wrapped',
+                body: 'envelope payload',
+                icon: null,
+                action_url: null,
+                source_app: 'crm',
+                read_at: null,
+                created_at: '2026-05-15T12:00:00.000Z',
+            },
+        };
+        act(() => {
+            echo.emit('NotificationCreated', wrapped);
+        });
+        expect(result.current.notifications).toHaveLength(1);
+        expect(result.current.notifications[0]?.id).toBe('n42');
+        expect(result.current.unreadCount).toBe(1);
+    });
 });
