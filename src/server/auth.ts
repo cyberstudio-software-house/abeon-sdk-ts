@@ -21,6 +21,15 @@ export interface GetServerAuthContextOptions {
     audience?: string;
     /** Cookie holding the access JWT. Default: `ABEON_JWT_COOKIE_NAME` env, else `'abeon_token'`. */
     cookieName?: string;
+    /**
+     * H2: invoked when a token IS present but verification failed (network
+     * error reaching JWKS, key not found, signature mismatch, expired, wrong
+     * iss/aud, wrong `type`, malformed JWT). Distinguishes "user not logged
+     * in" (no token) from "user has a token but it's bad" — the latter
+     * usually wants a logout/redirect, not a silent anonymous render.
+     * NOT called when the cookie is simply absent.
+     */
+    onError?: (error: unknown) => void;
 }
 
 /**
@@ -57,12 +66,19 @@ export async function getServerAuthContext(
     const jwks = options.jwks ?? resolveJwks(options.jwksUrl);
 
     try {
-        const { payload } = await jwtVerify(token, jwks, {
+        // H1: pin RS256 explicitly. Default jose behaviour accepts any
+        // algorithm advertised by the JWK, which leaves a small surface
+        // for `alg: none` / HS256-with-public-key confusion attacks if a
+        // JWKS endpoint is ever misconfigured. Abeon JWTs are RS256.
+        // M11: jose accepts a generic for typed payload — no unsafe cast.
+        const { payload: userPayload } = await jwtVerify<UserJwtPayload>(token, jwks, {
             issuer: options.issuer ?? DEFAULTS.AUTH_ISSUER,
             audience: options.audience ?? DEFAULTS.AUTH_AUDIENCE,
+            algorithms: ['RS256'],
         });
-        const userPayload = payload as unknown as UserJwtPayload;
         if (userPayload.type !== 'user') {
+            const err = new Error('JWT type is not "user"');
+            options.onError?.(err);
             return { user: null, payload: null };
         }
         return {
@@ -76,7 +92,8 @@ export async function getServerAuthContext(
             },
             payload: userPayload,
         };
-    } catch {
+    } catch (err) {
+        options.onError?.(err);
         return { user: null, payload: null };
     }
 }
@@ -194,10 +211,9 @@ function readEnv(name: string): string | undefined {
 }
 
 function extractSetCookies(headers: Headers): string[] {
-    const withGetSetCookie = headers as Headers & { getSetCookie?: () => string[] };
-    if (typeof withGetSetCookie.getSetCookie === 'function') {
-        return withGetSetCookie.getSetCookie();
-    }
-    const single = headers.get('set-cookie');
-    return single ? [single] : [];
+    // H8: package.json engines.node >= 20, so Headers#getSetCookie is native.
+    // The old `.get('set-cookie')` fallback collapsed multiple cookies into
+    // one comma-joined string and lost the access/refresh split — actively
+    // wrong rather than degraded.
+    return headers.getSetCookie();
 }
