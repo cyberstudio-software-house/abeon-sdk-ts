@@ -89,6 +89,7 @@ export function Bell() {
 
 Full walkthroughs:
 
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — comprehensive architectural reference: layers, contracts, lifecycle, extension points
 - [`docs/nextjs-integration.md`](docs/nextjs-integration.md) — Next.js 15 App Router setup
 - [`docs/inertia-integration.md`](docs/inertia-integration.md) — Laravel + Inertia setup
 - [`docs/synchronization.md`](docs/synchronization.md) — PHP ↔ TS contract maintenance
