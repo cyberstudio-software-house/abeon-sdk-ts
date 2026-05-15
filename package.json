@@ -46,6 +46,9 @@
         "sync-schemas": "tsx scripts/sync-schemas.ts",
         "sync-schemas:check": "tsx scripts/sync-schemas.ts --check"
     },
+    "dependencies": {
+        "jose": "^5.10.0"
+    },
     "peerDependencies": {
         "react": "^19.0.0",
         "react-dom": "^19.0.0"

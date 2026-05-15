@@ -1,3 +1,2 @@
-// Browser-only barrel. Sprint B lands `createApiClient`, CSRF helpers, etc.
-
-export {};
+export { createApiClient, type CreateApiClientOptions } from './api-client.js';
+export type { ApiClient, RequestOptions } from '../_internal/api-client-base.js';
