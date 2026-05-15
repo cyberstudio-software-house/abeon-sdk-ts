@@ -47,7 +47,9 @@
         "sync-schemas:check": "tsx scripts/sync-schemas.ts --check"
     },
     "dependencies": {
-        "jose": "^5.10.0"
+        "jose": "^5.10.0",
+        "laravel-echo": "^1.16.1",
+        "pusher-js": "^8.4.0"
     },
     "peerDependencies": {
         "react": "^19.0.0",

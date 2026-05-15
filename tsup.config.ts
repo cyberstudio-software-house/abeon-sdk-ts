@@ -14,5 +14,5 @@ export default defineConfig({
     splitting: false,
     treeshake: true,
     target: 'es2022',
-    external: ['react', 'react-dom', 'next/headers', 'next/server'],
+    external: ['react', 'react-dom', 'next/headers', 'next/server', 'laravel-echo', 'pusher-js'],
 });
