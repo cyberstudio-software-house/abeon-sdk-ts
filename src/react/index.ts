@@ -1,4 +1,4 @@
-// React-only barrel. Sprint C lands `<AbeonProvider>`, `useAuth`, `useApi`,
-// `useApps`. Sprint D lands `useNotifications`, `useWebSocket`.
-
-export {};
+export { AbeonProvider, type AbeonProviderProps } from './provider.js';
+export { useAuth, type UseAuthReturn } from './use-auth.js';
+export { useApi } from './use-api.js';
+export { useApps, type UseAppsOptions, type UseAppsReturn } from './use-apps.js';
