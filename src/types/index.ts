@@ -10,3 +10,11 @@ export type { EventEnvelope, EventMetadata } from './envelope.js';
 export { ROUTING_KEY_REGEX } from './envelope.js';
 export type { NotificationDto } from './notification.js';
 export type { UserJwtPayload, ServiceJwtPayload, AbeonJwtPayload } from './jwt.js';
+export type {
+    Preferences,
+    ChromePreferences,
+    PinnedItem,
+    RecentEntry,
+    ThemePreference,
+} from './preferences.js';
+export { PREFERENCES_DEFAULTS, THEME_STORAGE_KEY } from './preferences.js';
