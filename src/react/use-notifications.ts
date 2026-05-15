@@ -88,8 +88,12 @@ export function useNotifications(
     const [connected, setConnected] = useState<boolean>(false);
 
     // Keep stable refs to break the dep cycle between callbacks and state.
+    // H7: write the ref inside an effect, not during render — render-phase
+    // side effects break Concurrent React (strict mode double-render, Suspense).
     const notificationsRef = useRef<NotificationDto[]>([]);
-    notificationsRef.current = notifications;
+    useEffect(() => {
+        notificationsRef.current = notifications;
+    }, [notifications]);
 
     const refresh = useCallback(async () => {
         if (!user) return;

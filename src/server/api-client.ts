@@ -57,10 +57,16 @@ export function createServerApiClient(
 
     const defaultHeaders: Record<string, string> = { ...(options.headers ?? {}) };
 
+    // H4: respect an explicit Authorization passed via `options.headers`
+    // (e.g. service-to-service JWT for a system endpoint). Only fall back
+    // to the user JWT cookie when the caller did NOT set one themselves.
+    const hasExplicitAuth = hasHeader(defaultHeaders, HEADERS.AUTHORIZATION);
     // V1: cookie JWT → Authorization Bearer (PHP AuthMiddleware reads header only).
-    const jwt = cookies.get(jwtCookieName)?.value;
-    if (jwt) {
-        defaultHeaders[HEADERS.AUTHORIZATION] = `Bearer ${jwt}`;
+    if (!hasExplicitAuth) {
+        const jwt = cookies.get(jwtCookieName)?.value;
+        if (jwt) {
+            defaultHeaders[HEADERS.AUTHORIZATION] = `Bearer ${jwt}`;
+        }
     }
 
     // V3: forward inbound X-Correlation-ID, else generate fresh.
@@ -84,4 +90,12 @@ function readEnv(name: string): string | undefined {
     if (typeof process === 'undefined' || !process.env) return undefined;
     const v = process.env[name];
     return v && v !== '' ? v : undefined;
+}
+
+function hasHeader(headers: Record<string, string>, name: string): boolean {
+    const lower = name.toLowerCase();
+    for (const key of Object.keys(headers)) {
+        if (key.toLowerCase() === lower) return true;
+    }
+    return false;
 }

@@ -49,13 +49,18 @@ export function AbeonProvider({
 }: AbeonProviderProps): ReactNode {
     const [user, setUser] = useState<User | null>(initialAuth?.user ?? null);
 
-    const value = useMemo<AbeonContextValue>(() => {
-        return {
-            user,
-            setUser,
-            apiClient: apiClient ?? createApiClient(),
-        };
-    }, [user, apiClient]);
+    // C1: stable apiClient reference — recreates only when caller swaps the
+    // `apiClient` prop, not when `user` changes. Otherwise every `setUser`
+    // would mint a fresh client, busting downstream `useEffect([api,...])`.
+    const stableApiClient = useMemo<ApiClient>(
+        () => apiClient ?? createApiClient(),
+        [apiClient],
+    );
+
+    const value = useMemo<AbeonContextValue>(
+        () => ({ user, setUser, apiClient: stableApiClient }),
+        [user, stableApiClient],
+    );
 
     return <AbeonContext.Provider value={value}>{children}</AbeonContext.Provider>;
 }
