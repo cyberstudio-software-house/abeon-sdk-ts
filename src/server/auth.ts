@@ -215,5 +215,10 @@ function extractSetCookies(headers: Headers): string[] {
     // The old `.get('set-cookie')` fallback collapsed multiple cookies into
     // one comma-joined string and lost the access/refresh split — actively
     // wrong rather than degraded.
-    return headers.getSetCookie();
+    // H6: drop any cookie containing CR/LF. Auth is internal and trusted, but
+    // we forward these straight onto the outgoing NextResponse via
+    // `headers.append('Set-Cookie', ...)`. A stray newline from a misbehaving
+    // upstream would split the response — defensive against header
+    // injection even from "trusted" sources.
+    return headers.getSetCookie().filter((c) => !/[\r\n]/.test(c));
 }

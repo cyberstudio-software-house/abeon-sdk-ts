@@ -168,25 +168,33 @@ export function useNotifications(
 
         const channel = echo.private(channelName);
         channel.listen(eventName, (payload) => {
-            const notification = (payload as { notification?: NotificationDto } | NotificationDto)
-                ?.constructor === Object
-                ? ((payload as { notification?: NotificationDto }).notification ??
-                  (payload as NotificationDto))
-                : (payload as NotificationDto);
+            // M5: validate WS payload shape at runtime. Reverb delivers
+            // whatever the backend broadcasts — a contract drift on the PHP
+            // side would otherwise corrupt React state silently. The check
+            // is lightweight (~5 fields), not a full JSON Schema validation.
+            const notification = extractNotification(payload);
+            if (!notification) return;
 
-            if (notification && typeof notification === 'object' && 'id' in notification) {
-                setNotifications((prev) => [notification as NotificationDto, ...prev]);
-                if ((notification as NotificationDto).read_at === null) {
-                    setUnreadCount((c) => c + 1);
-                }
+            setNotifications((prev) => [notification, ...prev]);
+            if (notification.read_at === null) {
+                setUnreadCount((c) => c + 1);
             }
         });
         setConnected(true);
 
         return () => {
-            channel.stopListening(eventName);
-            echo.leave(channelName);
-            setConnected(false);
+            // M10: stopListening / leave can throw if Echo state is mid-tear-down
+            // (e.g. unmount during a network blip). Always clear `connected`
+            // and at least attempt `leave` so we don't leak channel subscriptions.
+            try {
+                channel.stopListening(eventName);
+            } finally {
+                try {
+                    echo.leave(channelName);
+                } finally {
+                    setConnected(false);
+                }
+            }
         };
     }, [options.echo, channelName, eventName]);
 
@@ -200,4 +208,29 @@ export function useNotifications(
         markAsRead,
         markAllAsRead,
     };
+}
+
+/**
+ * M5: lightweight runtime validator for WS notification payloads. Laravel
+ * Reverb may deliver the NotificationDto directly or wrapped as
+ * `{ notification: NotificationDto }` (depending on broadcast format).
+ * Returns null when the payload doesn't carry a usable shape — handler
+ * skips instead of corrupting state.
+ */
+function extractNotification(payload: unknown): NotificationDto | null {
+    if (payload === null || typeof payload !== 'object') return null;
+    const wrapped = (payload as { notification?: unknown }).notification;
+    const candidate = wrapped && typeof wrapped === 'object' ? wrapped : payload;
+
+    if (
+        candidate === null ||
+        typeof candidate !== 'object' ||
+        typeof (candidate as { id?: unknown }).id !== 'string' ||
+        typeof (candidate as { title?: unknown }).title !== 'string' ||
+        typeof (candidate as { body?: unknown }).body !== 'string' ||
+        typeof (candidate as { type?: unknown }).type !== 'string'
+    ) {
+        return null;
+    }
+    return candidate as NotificationDto;
 }

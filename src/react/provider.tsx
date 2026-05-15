@@ -47,7 +47,13 @@ export function AbeonProvider({
     initialAuth,
     apiClient,
 }: AbeonProviderProps): ReactNode {
-    const [user, setUser] = useState<User | null>(initialAuth?.user ?? null);
+    // M6: validate initialAuth shape at the entry point. Most callers pass
+    // the result of `getServerAuthContext()` directly — but a typo, an old
+    // SSR helper, or hydration from a stale cache may yield something that
+    // type-checks `User` only by structural coincidence. Bad shape → render
+    // as anonymous rather than crash a deep child accessing `user.roles`.
+    const validatedInitial = isValidUser(initialAuth?.user) ? initialAuth!.user! : null;
+    const [user, setUser] = useState<User | null>(validatedInitial);
 
     // C1: stable apiClient reference — recreates only when caller swaps the
     // `apiClient` prop, not when `user` changes. Otherwise every `setUser`
@@ -63,4 +69,16 @@ export function AbeonProvider({
     );
 
     return <AbeonContext.Provider value={value}>{children}</AbeonContext.Provider>;
+}
+
+function isValidUser(u: unknown): u is User {
+    if (u === null || u === undefined) return false;
+    if (typeof u !== 'object') return false;
+    const o = u as Record<string, unknown>;
+    return (
+        typeof o.id === 'string' &&
+        typeof o.email === 'string' &&
+        Array.isArray(o.roles) &&
+        Array.isArray(o.permissions)
+    );
 }
