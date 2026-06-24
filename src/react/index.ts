@@ -1,7 +1,24 @@
 export { AbeonProvider, type AbeonProviderProps } from './provider.js';
 export { useAuth, type UseAuthReturn } from './use-auth.js';
 export { useApi } from './use-api.js';
-export { useApps, type UseAppsOptions, type UseAppsReturn } from './use-apps.js';
+export {
+    useApps,
+    AppsProvider,
+    type UseAppsOptions,
+    type UseAppsReturn,
+    type AppsProviderProps,
+} from './use-apps.js';
+export {
+    buildNavCommands,
+    useRegisterNavCommands,
+    type NavCommandItem,
+    type BuildNavCommandsOptions,
+} from './nav-commands.js';
+export {
+    useRegisterSearchProvider,
+    searchResultToCommand,
+    type UseRegisterSearchProviderOptions,
+} from './search-provider.js';
 export {
     useNotifications,
     type UseNotificationsOptions,
@@ -17,8 +34,10 @@ export {
 } from './current-app.js';
 export {
     usePreferences,
+    PreferencesProvider,
     type UsePreferencesOptions,
     type UsePreferencesReturn,
+    type PreferencesProviderProps,
 } from './use-preferences.js';
 export {
     useAppOrder,

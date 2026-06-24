@@ -3,6 +3,7 @@ import type { ApiClient } from '../_internal/api-client-base.js';
 import { createApiClient } from '../client/api-client.js';
 import type { User } from '../types/user.js';
 import { AbeonContext, type AbeonContextValue } from './context.js';
+import { PreferencesProvider } from './use-preferences.js';
 
 export interface AbeonProviderProps {
     children: ReactNode;
@@ -68,7 +69,15 @@ export function AbeonProvider({
         [user, stableApiClient],
     );
 
-    return <AbeonContext.Provider value={value}>{children}</AbeonContext.Provider>;
+    // Mount PreferencesProvider here so every `usePreferences()` (and
+    // `useAppOrder()`) call inside the tree returns the SAME state instance.
+    // A single PATCH then propagates instantly to every consumer (sidebar,
+    // settings page, theme toggle, etc.) without anyone needing to re-fetch.
+    return (
+        <AbeonContext.Provider value={value}>
+            <PreferencesProvider>{children}</PreferencesProvider>
+        </AbeonContext.Provider>
+    );
 }
 
 function isValidUser(u: unknown): u is User {

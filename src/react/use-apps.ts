@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
+import {
+    createContext,
+    createElement,
+    useCallback,
+    useContext,
+    useEffect,
+    useState,
+    type ReactNode,
+} from 'react';
 import { AbeonError } from '../errors.js';
 import type { AppDescriptor } from '../types/app-descriptor.js';
 import { useApi } from './use-api.js';
@@ -25,15 +33,11 @@ export interface UseAppsReturn {
 }
 
 /**
- * Fetches the list of applications the current user can access — used by
- * `<AppSwitcher>` in @abeon/ui (arch doc 3.6). Source of truth: Auth
- * service's `GET /api/v1/auth/apps` (filtered by user permissions).
- *
- * Caches in-memory for the lifetime of the consuming component. For
- * cross-component sharing, mount this hook in the layout and pass the
- * `apps` array down — or hoist into the AbeonProvider (future Sprint).
+ * Internal fetcher — the actual REST call + local state. Used directly by
+ * `<AppsProvider>` (one shared instance) and as the standalone fallback when
+ * no provider is mounted.
  */
-export function useApps(options: UseAppsOptions = {}): UseAppsReturn {
+function useAppsFetcher(options: UseAppsOptions = {}): UseAppsReturn {
     const api = useApi();
     const path = options.path ?? '/api/v1/auth/apps';
     const autoLoad = options.autoLoad ?? true;
@@ -74,4 +78,45 @@ export function useApps(options: UseAppsOptions = {}): UseAppsReturn {
     }, [autoLoad, refresh]);
 
     return { apps, loading, error, refresh };
+}
+
+const AppsContext = createContext<UseAppsReturn | null>(null);
+AppsContext.displayName = 'AbeonApps';
+
+export interface AppsProviderProps extends UseAppsOptions {
+    children: ReactNode;
+}
+
+/**
+ * Hoists the app-registry fetch to a single instance for the subtree, so
+ * `<Topbar>`, `<AppSwitcher>` and any other consumer share one `/api/v1/auth/apps`
+ * request and one cache (G6). Mount it once at the chrome layer (e.g. the app's
+ * layout, below `<AbeonProvider>` so `useApi()` is available). Requires an
+ * authenticated context — `/api/v1/auth/apps` is auth-gated.
+ */
+export function AppsProvider({ children, ...options }: AppsProviderProps): ReactNode {
+    const value = useAppsFetcher(options);
+
+    return createElement(AppsContext.Provider, { value }, children);
+}
+
+/**
+ * Returns the list of applications the current user can access — used by
+ * `<AppSwitcher>` in @abeon/ui (arch doc 3.6). Source of truth: Auth
+ * service's `GET /api/v1/auth/apps` (filtered by user permissions).
+ *
+ * When an `<AppsProvider>` is mounted above (the default via `<AbeonProvider>`),
+ * every call shares that single fetch. With no provider, the hook falls back to
+ * its own local fetch so standalone use keeps working.
+ */
+export function useApps(options: UseAppsOptions = {}): UseAppsReturn {
+    const shared = useContext(AppsContext);
+    // When the shared provider is present, suppress the fallback's own fetch
+    // (keep hook order stable by always calling it).
+    const fallback = useAppsFetcher({
+        ...options,
+        autoLoad: shared ? false : (options.autoLoad ?? true),
+    });
+
+    return shared ?? fallback;
 }

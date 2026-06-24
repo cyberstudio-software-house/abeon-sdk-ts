@@ -29,6 +29,10 @@ const sampleApps: AppDescriptor[] = [
         icon: 'users',
         version: '1.0.0',
         permissions: ['crm.contacts.read'],
+        category: 'Sprzedaż i finanse',
+        order: 10,
+        mode: 'app',
+        fullscreen: false,
     },
     {
         name: 'pm',
@@ -37,6 +41,10 @@ const sampleApps: AppDescriptor[] = [
         icon: 'kanban',
         version: '1.0.0',
         permissions: ['pm.tasks.manage'],
+        category: 'Praca',
+        order: 20,
+        mode: 'app',
+        fullscreen: false,
     },
 ];
 

@@ -25,10 +25,21 @@ export interface ChromePreferences {
     recents?: RecentEntry[];
 }
 
+/**
+ * A pinned sidebar item, owned by the federated chrome and persisted in the
+ * `chrome.pinned` namespace. Shape matches what `@abeon/ui`'s
+ * `SidebarPinnedSection` renders and `PinItemDialog` produces, so chrome
+ * components consume it without translation. `isActive` is a render-time flag
+ * computed per-page (not persisted).
+ */
 export interface PinnedItem {
-    app: string;
-    path: string;
+    id: string;
     label: string;
+    href: string;
+    iconName: string;
+    sectionId: string;
+    order: number;
+    isActive?: boolean;
 }
 
 export interface RecentEntry {

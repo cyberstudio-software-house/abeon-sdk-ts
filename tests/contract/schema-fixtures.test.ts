@@ -45,6 +45,7 @@ const cases: Case[] = [
     { name: 'Permission DTO', schema: 'dto/permission.json', fixture: 'permission.json' },
     { name: 'Pagination DTO', schema: 'dto/pagination.json', fixture: 'pagination.json' },
     { name: 'AppDescriptor DTO', schema: 'dto/app-descriptor.json', fixture: 'app-descriptor.json' },
+    { name: 'SearchResult DTO', schema: 'dto/search-result.json', fixture: 'search-result.json' },
     { name: 'Event envelope', schema: 'events/_envelope.json', fixture: 'envelope.json' },
     { name: 'REST envelope', schema: 'http/envelope.json', fixture: 'envelope-rest.json' },
     { name: 'Problem details', schema: 'http/problem-details.json', fixture: 'problem-details.json' },

@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useRef,
+    useState,
+    type ReactNode,
+} from 'react';
 import { AbeonError } from '../errors.js';
 import type { Preferences } from '../types/preferences.js';
 import { PREFERENCES_DEFAULTS } from '../types/preferences.js';
@@ -6,10 +14,7 @@ import { useApi } from './use-api.js';
 import { useAuth } from './use-auth.js';
 
 export interface UsePreferencesOptions {
-    /**
-     * Endpoint path. Default `/api/v1/auth/me/preferences` (Auth service,
-     * see ADR-0009).
-     */
+    /** Endpoint path. Default `/api/v1/auth/me/preferences` (Auth service, ADR-0009). */
     path?: string;
     /** Auto-fetch on mount when the user is authenticated. Default `true`. */
     autoLoad?: boolean;
@@ -30,19 +35,58 @@ export interface UsePreferencesReturn {
     refresh: () => Promise<void>;
 }
 
+const PreferencesContext = createContext<UsePreferencesReturn | null>(null);
+
+export interface PreferencesProviderProps {
+    children: ReactNode;
+    options?: UsePreferencesOptions;
+}
+
+/**
+ * Optional provider that hosts one usePreferences() state instance for the
+ * subtree, so every `usePreferences()` call inside it returns the same
+ * state — one PATCH propagates instantly to every component.
+ *
+ * `<AbeonProvider>` mounts this automatically, so consumer apps don't have
+ * to wire it themselves. Use it directly only in tests or when isolating
+ * a subtree from the shared cache.
+ */
+export function PreferencesProvider({ children, options }: PreferencesProviderProps): ReactNode {
+    const value = usePreferencesState(options ?? {}, true);
+
+    return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>;
+}
+
 /**
  * Hook for the user's preferences blob (chrome layout, theme, pinned items,
  * cross-app settings). Wraps `GET / PATCH /api/v1/auth/me/preferences`.
  *
  * Behaviour:
+ *   - Inside `<PreferencesProvider>` (auto-mounted by `<AbeonProvider>`),
+ *     every call returns the SHARED state — one update propagates
+ *     immediately to every consumer. This is the normal case.
+ *   - Without a provider, falls back to per-instance local state (back-compat
+ *     for tests / standalone usage). Each caller fetches independently.
  *   - When unauthenticated, returns defaults and no-ops on writes.
- *   - First mount fetches; subsequent mounts of the same hook DO refetch
- *     (no cross-component cache yet — that's a v0.2 enhancement; in
- *     practice the chrome mounts this once at the layout root).
- *   - `update()` is optimistic: state updates before the PATCH completes.
- *     A failed PATCH restores the previous state and surfaces the error.
+ *   - `update()` is optimistic: state updates before the PATCH completes;
+ *     a failed PATCH restores the previous state and surfaces the error.
  */
 export function usePreferences(options: UsePreferencesOptions = {}): UsePreferencesReturn {
+    const ctx = useContext(PreferencesContext);
+    // Always call the underlying hook so the order is stable across renders.
+    // When a provider supplies state (`ctx` non-null) the local instance is
+    // inactive — no fetch, no writes — and we return the shared value.
+    const local = usePreferencesState(options, ctx === null);
+
+    return ctx ?? local;
+}
+
+/**
+ * The actual state + fetching logic. `active=false` skips network work and
+ * makes refresh/update no-ops — used when a parent PreferencesProvider is
+ * already the source of truth for this subtree.
+ */
+function usePreferencesState(options: UsePreferencesOptions, active: boolean): UsePreferencesReturn {
     const api = useApi();
     const { user } = useAuth();
     const path = options.path ?? '/api/v1/auth/me/preferences';
@@ -56,7 +100,7 @@ export function usePreferences(options: UsePreferencesOptions = {}): UsePreferen
     const lastFetched = useRef<Preferences | null>(null);
 
     const refresh = useCallback(async () => {
-        if (!user) return;
+        if (!active || !user) return;
         setLoading(true);
         setError(null);
         try {
@@ -69,11 +113,11 @@ export function usePreferences(options: UsePreferencesOptions = {}): UsePreferen
         } finally {
             setLoading(false);
         }
-    }, [api, path, user]);
+    }, [active, api, path, user]);
 
     const update = useCallback(
         async (patch: Partial<Preferences>) => {
-            if (!user) return;
+            if (!active || !user) return;
             const before = preferences;
             const optimistic = mergeTopLevel(before, patch);
             setPreferences(optimistic);
@@ -91,14 +135,14 @@ export function usePreferences(options: UsePreferencesOptions = {}): UsePreferen
                 setSaving(false);
             }
         },
-        [api, path, preferences, user],
+        [active, api, path, preferences, user],
     );
 
     useEffect(() => {
-        if (autoLoad && user) {
+        if (active && autoLoad && user) {
             void refresh();
         }
-    }, [autoLoad, refresh, user]);
+    }, [active, autoLoad, refresh, user]);
 
     return { preferences, loading, saving, error, update, refresh };
 }

@@ -9,4 +9,12 @@ export interface AppDescriptor {
     icon: string | null;
     version: string | null;
     permissions: string[];
+    /** Free-form AppSwitcher group label. */
+    category: string | null;
+    /** Sort hint within the switcher / category (ascending). */
+    order: number | null;
+    /** Chrome UI mode the app prefers. */
+    mode: 'suite' | 'app' | null;
+    /** Render chrome-less / full-bleed. */
+    fullscreen: boolean | null;
 }
