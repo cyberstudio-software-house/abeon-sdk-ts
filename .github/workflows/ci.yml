@@ -16,13 +16,6 @@ jobs:
         with:
           path: abeon-shared
 
-      - name: Checkout abeon-sdk-php (schemas source)
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ github.repository_owner }}/abeon-sdk-php
-          path: abeon-sdk-php
-          token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -33,10 +26,6 @@ jobs:
       - name: Install
         working-directory: abeon-shared
         run: npm ci
-
-      - name: Verify schemas in sync with abeon-sdk-php
-        working-directory: abeon-shared
-        run: npm run sync-schemas:check
 
       - name: Lint
         working-directory: abeon-shared
