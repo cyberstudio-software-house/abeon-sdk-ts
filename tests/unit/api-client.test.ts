@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { createApiClient } from '../../src/client/api-client.js';
 import { AbeonError } from '../../src/errors.js';
 import { HEADERS } from '../../src/constants.js';
