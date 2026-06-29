@@ -26,6 +26,11 @@ export {
     type EchoLike,
 } from './use-notifications.js';
 export {
+    useStore,
+    type UseStoreOptions,
+    type UseStoreReturn,
+} from './use-store.js';
+export {
     CurrentAppProvider,
     useCurrentApp,
     deriveCurrentApp,

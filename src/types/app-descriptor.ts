@@ -17,4 +17,9 @@ export interface AppDescriptor {
     mode: 'suite' | 'app' | null;
     /** Render chrome-less / full-bleed. */
     fullscreen: boolean | null;
+    /**
+     * Org-level enablement (ADR-0015). Populated by Auth on catalog/apps
+     * responses; null/ignored on self-registration.
+     */
+    enabled: boolean | null;
 }

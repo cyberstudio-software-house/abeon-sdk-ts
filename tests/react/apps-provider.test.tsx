@@ -18,6 +18,7 @@ const sampleApps: AppDescriptor[] = [
         order: 10,
         mode: 'app',
         fullscreen: false,
+        enabled: true,
     },
 ];
 

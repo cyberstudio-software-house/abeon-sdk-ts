@@ -33,6 +33,7 @@ const sampleApps: AppDescriptor[] = [
         order: 10,
         mode: 'app',
         fullscreen: false,
+        enabled: true,
     },
     {
         name: 'pm',
@@ -45,6 +46,7 @@ const sampleApps: AppDescriptor[] = [
         order: 20,
         mode: 'app',
         fullscreen: false,
+        enabled: true,
     },
 ];
 
