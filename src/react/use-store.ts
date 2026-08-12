@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { AbeonError } from '../errors.js';
 import type { AppDescriptor } from '../types/app-descriptor.js';
+import { AbeonContext } from './context.js';
 import { useApi } from './use-api.js';
 
 export interface UseStoreOptions {
@@ -15,13 +16,24 @@ export interface UseStoreOptions {
 }
 
 export interface UseStoreReturn {
-    /** Full app catalog (every registered app; `enabled` reflects org enablement). */
+    /**
+     * Full app catalog for the **current organisation** — every registered app, with
+     * `enabled` reflecting whether that organisation holds it.
+     */
     catalog: AppDescriptor[];
     loading: boolean;
     error: AbeonError | null;
     /** Re-fetch the catalog. */
     refresh: () => Promise<void>;
-    /** Enable/disable an app for the org, then refresh the catalog. */
+    /**
+     * Assign an app to the current organisation, or take it away, then refresh.
+     *
+     * "Enable" means **install for this organisation** (a `tenant_apps` row), not a
+     * platform-wide switch — admin scope is per organisation (ADR-0015 as amended by
+     * ADR-0016). The target organisation is the one in the caller's token, never a
+     * parameter: a client naming its own organisation would be choosing whose data
+     * it changes.
+     */
     setEnabled: (name: string, enabled: boolean) => Promise<void>;
 }
 
@@ -37,13 +49,19 @@ function toAbeonError(err: unknown): AbeonError {
 }
 
 /**
- * Admin App Store hook (ADR-0015). Lists the full app catalog and toggles
- * org-level enablement — the "add an app to your plan" flow. Mirrors
- * `useApps`/`useNotifications`; backed by the store API (stubbed by
- * `abeon-auth-stub` until the real Auth ships it).
+ * Admin App Store hook (ADR-0015 as amended by ADR-0016). Lists the catalog for
+ * the current organisation and assigns apps to it — the "add an app to your plan"
+ * flow. Mirrors `useApps`/`useNotifications`; backed by the store API (stubbed by
+ * `abeon-auth-stub` until the real service ships it).
+ *
+ * The catalog is **organisation-relative**, so it re-derives on a tenant switch.
+ * Without that, an admin who switched organisations would see the previous one's
+ * enablement and toggle from stale state — while the write landed on the new
+ * organisation. Wrong on both halves at once.
  */
 export function useStore(options: UseStoreOptions = {}): UseStoreReturn {
     const api = useApi();
+    const tenantEpoch = useContext(AbeonContext)?.tenantEpoch ?? 0;
     const path = options.path ?? '/api/v1/auth/store';
     const autoLoad = options.autoLoad ?? true;
 
@@ -83,7 +101,9 @@ export function useStore(options: UseStoreOptions = {}): UseStoreReturn {
         if (autoLoad) {
             void refresh();
         }
-    }, [autoLoad, refresh]);
+        // tenantEpoch: `enabled` is resolved for the caller's organisation, so a
+        // switch invalidates the whole catalogue (ADR-0017).
+    }, [autoLoad, refresh, tenantEpoch]);
 
     return { catalog, loading, error, refresh, setEnabled };
 }

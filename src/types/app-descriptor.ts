@@ -18,8 +18,14 @@ export interface AppDescriptor {
     /** Render chrome-less / full-bleed. */
     fullscreen: boolean | null;
     /**
-     * Org-level enablement (ADR-0015). Populated by Auth on catalog/apps
-     * responses; null/ignored on self-registration.
+     * Whether this application is assigned to the caller's organisation — the
+     * presence of a `tenant_apps` row for `(org_id, app)` (ADR-0015 as amended by
+     * ADR-0016).
+     *
+     * **Organisation-relative:** the same app yields different values for different
+     * callers, so a cached catalogue is only valid for the organisation it was
+     * fetched for and must be re-derived when the active one changes (ADR-0017).
+     * `null` on self-registration — an app cannot know which organisations hold it.
      */
     enabled: boolean | null;
 }

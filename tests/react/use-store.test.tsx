@@ -3,7 +3,7 @@ import { renderHook, waitFor, act } from '@testing-library/react';
 import { type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import type { AppDescriptor } from '../../src/index.js';
-import { AbeonProvider, useStore } from '../../src/react/index.js';
+import { AbeonProvider, useStore, useTenant } from '../../src/react/index.js';
 import type { ApiClient } from '../../src/_internal/api-client-base.js';
 
 function app(name: string, enabled: boolean): AppDescriptor {
@@ -57,5 +57,63 @@ describe('useStore', () => {
 
         expect(post).toHaveBeenCalledWith('/api/v1/auth/store/helpdesk/enable');
         expect(result.current.catalog.find((a) => a.name === 'helpdesk')?.enabled).toBe(true);
+    });
+
+    it('re-derives the catalog when the organisation changes', async () => {
+        // `enabled` is organisation-relative (ADR-0015 as amended by ADR-0016), so
+        // the catalogue an admin sees after switching must be the new organisation's.
+        // Showing the previous one would mean toggling from stale state while the
+        // write lands on the new organisation — wrong on both halves at once.
+        const perOrg: Record<number, AppDescriptor[]> = {
+            1: [app('crm', true), app('cms', false)],
+            2: [app('crm', false), app('cms', true)],
+        };
+        let orgId = 1;
+
+        const api: ApiClient = {
+            request: (async () => ({})) as never,
+            get: (async (path: string) => {
+                if (path.includes('/auth/tenants')) {
+                    return {
+                        data: [
+                            { id: 1, name: 'Acme', slug: 'acme', current: orgId === 1 },
+                            { id: 2, name: 'Bravo', slug: 'bravo', current: orgId === 2 },
+                        ],
+                    };
+                }
+                return { data: perOrg[orgId] };
+            }) as ApiClient['get'],
+            post: (async (path: string) => {
+                if (path.includes('/auth/tenant')) {
+                    orgId = 2;
+                    return { data: { org_id: 2 } };
+                }
+                return {};
+            }) as ApiClient['post'],
+            put: (async () => ({})) as never,
+            patch: (async () => ({})) as never,
+            delete: (async () => ({})) as never,
+        };
+
+        const wrapper = ({ children }: { children: ReactNode }) => (
+            <AbeonProvider apiClient={api}>{children}</AbeonProvider>
+        );
+
+        const { result } = renderHook(() => ({ store: useStore(), tenant: useTenant() }), {
+            wrapper,
+        });
+
+        await waitFor(() =>
+            expect(result.current.store.catalog.find((a) => a.name === 'crm')?.enabled).toBe(true),
+        );
+
+        await act(async () => {
+            await result.current.tenant.switchTenant(2);
+        });
+
+        await waitFor(() => {
+            expect(result.current.store.catalog.find((a) => a.name === 'crm')?.enabled).toBe(false);
+            expect(result.current.store.catalog.find((a) => a.name === 'cms')?.enabled).toBe(true);
+        });
     });
 });
