@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { AbeonError } from '../errors.js';
 import type { AppDescriptor } from '../types/app-descriptor.js';
+import { AbeonContext } from './context.js';
 import { useApi } from './use-api.js';
 
 export interface UseAppsOptions {
@@ -41,6 +42,12 @@ function useAppsFetcher(options: UseAppsOptions = {}): UseAppsReturn {
     const api = useApi();
     const path = options.path ?? '/api/v1/auth/apps';
     const autoLoad = options.autoLoad ?? true;
+
+    // The app list is tenant-scoped: `/apps` returns tenant_apps ∩ permissions
+    // (ADR-0010 as amended by ADR-0016), so both halves change on a switch. Read
+    // the epoch so a switch re-fetches (ADR-0017). Optional context — the hook
+    // still works standalone, where there is nothing to invalidate.
+    const tenantEpoch = useContext(AbeonContext)?.tenantEpoch ?? 0;
 
     const [apps, setApps] = useState<AppDescriptor[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
@@ -75,7 +82,9 @@ function useAppsFetcher(options: UseAppsOptions = {}): UseAppsReturn {
         if (autoLoad) {
             void refresh();
         }
-    }, [autoLoad, refresh]);
+        // tenantEpoch is listed deliberately: a tenant switch must re-derive the
+        // list, and it is not otherwise reachable from `refresh`'s identity.
+    }, [autoLoad, refresh, tenantEpoch]);
 
     return { apps, loading, error, refresh };
 }

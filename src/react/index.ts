@@ -31,6 +31,13 @@ export {
     type UseStoreReturn,
 } from './use-store.js';
 export {
+    useTenant,
+    TenantProvider,
+    type UseTenantOptions,
+    type UseTenantReturn,
+    type TenantProviderProps,
+} from './use-tenant.js';
+export {
     CurrentAppProvider,
     useCurrentApp,
     deriveCurrentApp,

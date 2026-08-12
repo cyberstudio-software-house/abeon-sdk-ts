@@ -5,6 +5,35 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); this package is 
 
 ## [Unreleased]
 
+### 2026-08-12 — tenant state and switching (ADR-0016 / ADR-0017)
+
+The chrome half of multi-tenancy. Until now nothing in this package knew organisations existed.
+
+#### Added
+- **`useTenant()` + `<TenantProvider>`** — `{ tenants, currentTenant, canSwitch, loading, switching,
+  error, refresh, switchTenant }`. Mirrors `useApps`/`AppsProvider`: hoisted to a single fetch when the
+  provider is mounted, with a standalone fallback so the hook works on its own.
+  - `switchTenant(orgId)` posts to Auth, which verifies membership and **re-issues the token** with the
+    target membership's roles and permissions. The client never asserts its own tenant — `org_id` is an
+    authorization dimension, so a client-side selection would be a client choosing its own authorisation.
+  - `canSwitch` is false for a single-organisation user, who should see a label rather than a menu.
+  - A refused switch (403 for a non-membership) surfaces on `error` and leaves auth and the current
+    organisation untouched. Being refused is a normal outcome, not a broken session.
+- **`Tenant` type** mirroring `schemas/dto/tenant.json`. Carries no roles or permissions by contract —
+  it is a display list, and authorisation arrives only in the re-issued token.
+- **`tenantEpoch` on the Abeon context** — the invalidation signal for tenant-scoped state. A counter
+  rather than an event emitter, so it composes with React's dependency tracking: a hook opts in by
+  listing it, and nothing subscribes or unsubscribes.
+
+#### Changed
+- **`useApps` re-derives on switch.** `/apps` returns `tenant_apps` ∩ permissions (ADR-0010 as amended),
+  so both halves change and a stale list is a wrong list.
+- **`usePreferences` re-fetches on switch** — preferences are per-user-per-organisation (ADR-0009 as
+  amended). Pinned apps especially: a pin to `/crm/contacts` is meaningless in an organisation with no CRM.
+
+8 new tests, including one that asserts the app list actually re-derives — verified to fail when the
+epoch dependency is removed, so it is a real guard rather than a passing assertion.
+
 ### 2026-08-12 — multi-tenancy contract sync
 
 Mirrors the contract changes from `abeon/sdk` (ADR-0016 to ADR-0021). See

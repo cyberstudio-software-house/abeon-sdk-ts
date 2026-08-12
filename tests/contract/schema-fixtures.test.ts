@@ -42,6 +42,7 @@ interface Case {
 
 const cases: Case[] = [
     { name: 'User DTO', schema: 'dto/user.json', fixture: 'user.json' },
+    { name: 'Tenant DTO', schema: 'dto/tenant.json', fixture: 'tenant.json' },
     { name: 'Permission DTO', schema: 'dto/permission.json', fixture: 'permission.json' },
     { name: 'Pagination DTO', schema: 'dto/pagination.json', fixture: 'pagination.json' },
     { name: 'AppDescriptor DTO', schema: 'dto/app-descriptor.json', fixture: 'app-descriptor.json' },

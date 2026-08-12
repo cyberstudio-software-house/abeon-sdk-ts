@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import type { ApiClient } from '../_internal/api-client-base.js';
 import { createApiClient } from '../client/api-client.js';
 import type { User } from '../types/user.js';
@@ -64,9 +64,15 @@ export function AbeonProvider({
         [apiClient],
     );
 
+    // Invalidation signal for tenant-scoped state (ADR-0017). A counter rather
+    // than an event emitter: it composes with React's own dependency tracking, so
+    // a hook opts in by listing it, and nothing needs to subscribe or unsubscribe.
+    const [tenantEpoch, setTenantEpoch] = useState(0);
+    const onTenantSwitched = useCallback(() => setTenantEpoch((n) => n + 1), []);
+
     const value = useMemo<AbeonContextValue>(
-        () => ({ user, setUser, apiClient: stableApiClient }),
-        [user, stableApiClient],
+        () => ({ user, setUser, apiClient: stableApiClient, tenantEpoch, onTenantSwitched }),
+        [user, stableApiClient, tenantEpoch, onTenantSwitched],
     );
 
     // Mount PreferencesProvider here so every `usePreferences()` (and

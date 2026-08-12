@@ -10,6 +10,7 @@ import {
 import { AbeonError } from '../errors.js';
 import type { Preferences } from '../types/preferences.js';
 import { PREFERENCES_DEFAULTS } from '../types/preferences.js';
+import { AbeonContext } from './context.js';
 import { useApi } from './use-api.js';
 import { useAuth } from './use-auth.js';
 
@@ -89,6 +90,7 @@ export function usePreferences(options: UsePreferencesOptions = {}): UsePreferen
 function usePreferencesState(options: UsePreferencesOptions, active: boolean): UsePreferencesReturn {
     const api = useApi();
     const { user } = useAuth();
+    const tenantEpoch = useContext(AbeonContext)?.tenantEpoch ?? 0;
     const path = options.path ?? '/api/v1/auth/me/preferences';
     const autoLoad = options.autoLoad ?? true;
 
@@ -142,7 +144,11 @@ function usePreferencesState(options: UsePreferencesOptions, active: boolean): U
         if (active && autoLoad && user) {
             void refresh();
         }
-    }, [active, autoLoad, refresh, user]);
+        // tenantEpoch: preferences are per-user-per-organisation (ADR-0009 as
+        // amended by ADR-0016), so a switch must re-fetch them. Pinned apps in
+        // particular are meaningless across organisations — a pin to /crm/contacts
+        // means nothing in an organisation that has no CRM.
+    }, [active, autoLoad, refresh, user, tenantEpoch]);
 
     return { preferences, loading, saving, error, update, refresh };
 }
