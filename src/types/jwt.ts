@@ -15,7 +15,13 @@ export interface UserJwtPayload {
     name?: string | null;
     roles: string[];
     permissions: string[];
-    org_id?: number | null;
+    /**
+     * Organisation this token is scoped to. Required — an authorization and
+     * data-scoping dimension, not a display field (ADR-0016). A user belonging to
+     * several organisations holds a token for exactly one at a time; switching
+     * re-issues the token (ADR-0017).
+     */
+    org_id: number;
     jti: string;
 }
 
@@ -33,6 +39,11 @@ export interface ServiceJwtPayload {
     aud: 'abeon';
     type: 'service';
     service_name: string;
+    /**
+     * Set when the service acts on behalf of an organisation (ADR-0005 as amended
+     * by ADR-0016). Absent or null means no organisation — never "all organisations".
+     */
+    org_id?: number | null;
     jti: string;
 }
 

@@ -78,3 +78,56 @@ describe('regression — fixture changes do not silently break', () => {
         expect(validate.errors).toBeDefined();
     });
 });
+
+/**
+ * `org_id` is the authorization and data-scoping dimension (ADR-0016). These lock
+ * in that it stays required, so a later edit cannot quietly relax it while every
+ * other test still passes.
+ */
+describe('multi-tenancy — org_id stays required', () => {
+    function without(fixture: string, key: string): Record<string, unknown> {
+        const copy = { ...loadJson<Record<string, unknown>>(join(FIXTURES_DIR, fixture)) };
+        delete copy[key];
+        return copy;
+    }
+
+    it('event envelope without org_id is rejected', () => {
+        // A consumer has no request context and no AuthContext, so the envelope is
+        // its only possible source of tenant (ADR-0018).
+        expect(compile('events/_envelope.json')(without('envelope.json', 'org_id'))).toBe(false);
+    });
+
+    it('event envelope accepts a null org_id for platform-level events', () => {
+        const platform = {
+            ...loadJson<Record<string, unknown>>(join(FIXTURES_DIR, 'envelope.json')),
+            org_id: null,
+        };
+        // null = "no organisation", not "all organisations". Consumers that need a
+        // tenant must refuse it; the envelope itself is well-formed.
+        expect(compile('events/_envelope.json')(platform)).toBe(true);
+    });
+
+    it('user DTO without org_id is rejected', () => {
+        expect(compile('dto/user.json')(without('user.json', 'org_id'))).toBe(false);
+    });
+
+    it('user JWT without org_id is rejected', () => {
+        expect(compile('auth/jwt-user.json')(without('jwt-user-decoded.json', 'org_id'))).toBe(false);
+    });
+
+    it('user JWT with a null org_id is rejected', () => {
+        const nulled = {
+            ...loadJson<Record<string, unknown>>(join(FIXTURES_DIR, 'jwt-user-decoded.json')),
+            org_id: null,
+        };
+        // A user token is always scoped to exactly one organisation.
+        expect(compile('auth/jwt-user.json')(nulled)).toBe(false);
+    });
+
+    it('service JWT may omit org_id — organisation-less work is legitimate', () => {
+        // Registry self-registration, health probes, scheduled maintenance.
+        expect(
+            compile('auth/jwt-service.json')(without('jwt-service-decoded.json', 'org_id')),
+        ).toBe(true);
+    });
+});
