@@ -102,12 +102,18 @@ export function useNotifications(
         try {
             const [listResponse, countResponse] = await Promise.all([
                 api.get<{ data: NotificationDto[] }>(fetchPath),
-                api.get<{ data: { count: number } }>(unreadCountPath).catch(() => null),
+                api.get<{ data: { unread_count: number } }>(unreadCountPath).catch(() => null),
             ]);
             setNotifications(Array.isArray(listResponse?.data) ? listResponse.data : []);
-            if (countResponse && typeof countResponse.data?.count === 'number') {
-                setUnreadCount(countResponse.data.count);
+            // ADR-0006 names this field `unread_count`. It was read as `count` here
+            // until 2026-08-13, and the dev stub copied the hook rather than the ADR,
+            // so nothing disagreed until a real service served the contract shape.
+            if (countResponse && typeof countResponse.data?.unread_count === 'number') {
+                setUnreadCount(countResponse.data.unread_count);
             } else {
+                // The fallback counts the first page only, so it is a degraded answer,
+                // not an equivalent one — it exists for a missing endpoint, not for a
+                // renamed field.
                 const unread = (Array.isArray(listResponse?.data) ? listResponse.data : []).filter(
                     (n) => n.read_at === null,
                 ).length;

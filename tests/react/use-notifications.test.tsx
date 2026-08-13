@@ -117,7 +117,7 @@ describe('useNotifications', () => {
     it('fetches notifications and unread count on mount', async () => {
         const { api, calls } = recordingApi({
             'GET /api/v1/notifications': { data: sampleNotifications },
-            'GET /api/v1/notifications/unread-count': { data: { count: 1 } },
+            'GET /api/v1/notifications/unread-count': { data: { unread_count: 1 } },
         });
         const { result } = renderHook(() => useNotifications(), { wrapper: wrap(api) });
 
@@ -139,6 +139,22 @@ describe('useNotifications', () => {
         expect(result.current.unreadCount).toBe(1);
     });
 
+    it('reads unread_count, not the pre-ADR-0006 count field', async () => {
+        // The hook read `data.count` until 2026-08-13 while ADR-0006 specified
+        // `data.unread_count`. The dev stub copied the hook rather than the ADR, so
+        // the two agreed with each other and disagreed with the contract — invisible
+        // until a real service served the contract shape. A server answering with the
+        // old field must now be treated as not having answered at all.
+        const { api } = recordingApi({
+            'GET /api/v1/notifications': { data: sampleNotifications },
+            'GET /api/v1/notifications/unread-count': { data: { count: 99 } },
+        });
+        const { result } = renderHook(() => useNotifications(), { wrapper: wrap(api) });
+
+        await waitFor(() => expect(result.current.loading).toBe(false));
+        expect(result.current.unreadCount).toBe(1); // derived from the list, not 99
+    });
+
     it('does nothing when user is not authenticated', async () => {
         const { api, calls } = recordingApi({});
         const { result } = renderHook(() => useNotifications(), {
@@ -151,7 +167,7 @@ describe('useNotifications', () => {
     it('markAsRead PATCHes the resource and updates state optimistically', async () => {
         const { api, calls } = recordingApi({
             'GET /api/v1/notifications': { data: sampleNotifications },
-            'GET /api/v1/notifications/unread-count': { data: { count: 1 } },
+            'GET /api/v1/notifications/unread-count': { data: { unread_count: 1 } },
             'PATCH /api/v1/notifications/n1/read': null,
         });
         const { result } = renderHook(() => useNotifications(), { wrapper: wrap(api) });
@@ -172,7 +188,7 @@ describe('useNotifications', () => {
     it('markAllAsRead POSTs and clears unread count', async () => {
         const { api, calls } = recordingApi({
             'GET /api/v1/notifications': { data: sampleNotifications },
-            'GET /api/v1/notifications/unread-count': { data: { count: 1 } },
+            'GET /api/v1/notifications/unread-count': { data: { unread_count: 1 } },
             'POST /api/v1/notifications/mark-all-read': null,
         });
         const { result } = renderHook(() => useNotifications(), { wrapper: wrap(api) });
@@ -192,7 +208,7 @@ describe('useNotifications', () => {
     it('binds to Echo private channel when echo is provided and emits push updates', async () => {
         const { api } = recordingApi({
             'GET /api/v1/notifications': { data: [] },
-            'GET /api/v1/notifications/unread-count': { data: { count: 0 } },
+            'GET /api/v1/notifications/unread-count': { data: { unread_count: 0 } },
         });
         const echo = fakeEcho();
         const { result } = renderHook(() => useNotifications({ echo }), {
@@ -225,7 +241,7 @@ describe('useNotifications', () => {
     it('leaves the channel on unmount', async () => {
         const { api } = recordingApi({
             'GET /api/v1/notifications': { data: [] },
-            'GET /api/v1/notifications/unread-count': { data: { count: 0 } },
+            'GET /api/v1/notifications/unread-count': { data: { unread_count: 0 } },
         });
         const echo = fakeEcho();
         const { unmount, result } = renderHook(
@@ -243,7 +259,7 @@ describe('useNotifications', () => {
     it('ignores WS payloads missing required fields (M5)', async () => {
         const { api } = recordingApi({
             'GET /api/v1/notifications': { data: [] },
-            'GET /api/v1/notifications/unread-count': { data: { count: 0 } },
+            'GET /api/v1/notifications/unread-count': { data: { unread_count: 0 } },
         });
         const echo = fakeEcho();
         const { result } = renderHook(
@@ -268,7 +284,7 @@ describe('useNotifications', () => {
     it('unwraps `{ notification: ... }` payload envelope', async () => {
         const { api } = recordingApi({
             'GET /api/v1/notifications': { data: [] },
-            'GET /api/v1/notifications/unread-count': { data: { count: 0 } },
+            'GET /api/v1/notifications/unread-count': { data: { unread_count: 0 } },
         });
         const echo = fakeEcho();
         const { result } = renderHook(
