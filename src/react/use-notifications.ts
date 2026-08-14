@@ -101,23 +101,33 @@ export function useNotifications(
         setError(null);
         try {
             const [listResponse, countResponse] = await Promise.all([
-                api.get<{ data: NotificationDto[] }>(fetchPath),
+                api.get<{ data: NotificationDto[]; meta?: { unread_count?: number } }>(fetchPath),
                 api.get<{ data: { unread_count: number } }>(unreadCountPath).catch(() => null),
             ]);
-            setNotifications(Array.isArray(listResponse?.data) ? listResponse.data : []);
-            // ADR-0006 names this field `unread_count`. It was read as `count` here
-            // until 2026-08-13, and the dev stub copied the hook rather than the ADR,
-            // so nothing disagreed until a real service served the contract shape.
+            const page = Array.isArray(listResponse?.data) ? listResponse.data : [];
+            setNotifications(page);
+
+            // Three sources, in order of how much they know.
+            //
+            // ADR-0006 names this field `unread_count`. It was read as `count` here until
+            // 2026-08-13, and the dev stub copied the hook rather than the ADR, so
+            // nothing disagreed until a real service served the contract shape.
             if (countResponse && typeof countResponse.data?.unread_count === 'number') {
                 setUnreadCount(countResponse.data.unread_count);
+            } else if (typeof listResponse?.meta?.unread_count === 'number') {
+                // The list already carries the authoritative count in `meta`, and the
+                // hook was throwing it away. Until 2026-08-15 a failing `/unread-count`
+                // — a 401 while the token was being refreshed, a timeout, anything —
+                // was swallowed by `.catch(() => null)` and the badge fell straight to
+                // counting the loaded page.
+                setUnreadCount(listResponse.meta.unread_count);
             } else {
-                // The fallback counts the first page only, so it is a degraded answer,
-                // not an equivalent one — it exists for a missing endpoint, not for a
-                // renamed field.
-                const unread = (Array.isArray(listResponse?.data) ? listResponse.data : []).filter(
-                    (n) => n.read_at === null,
-                ).length;
-                setUnreadCount(unread);
+                // Last resort, and genuinely wrong rather than merely approximate. A
+                // page is 20 items newest-first, so somebody whose 20 most recent are
+                // read and whose older ones are not gets **zero** — a silent bell, with
+                // `error` still null because the failure was already caught. It exists
+                // for a service that has no count endpoint at all.
+                setUnreadCount(page.filter((n) => n.read_at === null).length);
             }
         } catch (err) {
             setError(

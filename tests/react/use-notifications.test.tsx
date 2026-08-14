@@ -155,6 +155,41 @@ describe('useNotifications', () => {
         expect(result.current.unreadCount).toBe(1); // derived from the list, not 99
     });
 
+    it('falls back to the count the list already carried when /unread-count fails', async () => {
+        // The bug this replaces: `.catch(() => null)` swallowed *any* failure of the
+        // count endpoint — a 401 while the token was being refreshed, a timeout, a 500 —
+        // and the badge fell straight through to counting the loaded page. A page is 20
+        // items newest-first, so a user whose 20 most recent are read and whose older
+        // ones are not saw **zero**, with `error` still null because the failure had
+        // already been caught. A silent bell, indistinguishable from nothing to show.
+        //
+        // The list response has carried the authoritative number in `meta.unread_count`
+        // the whole time.
+        const { api } = recordingApi({
+            'GET /api/v1/notifications': {
+                data: sampleNotifications.map((n) => ({ ...n, read_at: '2026-08-15T09:00:00Z' })),
+                meta: { unread_count: 30 },
+            },
+            'GET /api/v1/notifications/unread-count': new Error('gateway timeout'),
+        });
+        const { result } = renderHook(() => useNotifications(), { wrapper: wrap(api) });
+
+        await waitFor(() => expect(result.current.loading).toBe(false));
+        expect(result.current.unreadCount).toBe(30);
+    });
+
+    it('counts the page only when nothing authoritative is available', async () => {
+        // The genuine last resort — a service with no count endpoint and no meta.
+        const { api } = recordingApi({
+            'GET /api/v1/notifications': { data: sampleNotifications },
+            'GET /api/v1/notifications/unread-count': new Error('not implemented'),
+        });
+        const { result } = renderHook(() => useNotifications(), { wrapper: wrap(api) });
+
+        await waitFor(() => expect(result.current.loading).toBe(false));
+        expect(result.current.unreadCount).toBe(1);
+    });
+
     it('does nothing when user is not authenticated', async () => {
         const { api, calls } = recordingApi({});
         const { result } = renderHook(() => useNotifications(), {
