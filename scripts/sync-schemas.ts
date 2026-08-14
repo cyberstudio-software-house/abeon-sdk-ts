@@ -85,12 +85,21 @@ function syncFile(relativePath: string, stats: SyncStats): void {
     }
 }
 
+/**
+ * Compile every schema, to catch one that is not a valid JSON Schema.
+ *
+ * `fixtures/` is skipped: those files are *instances* — a user, a problem document, a
+ * decoded token — and compiling a `{"id": "42"}` as a schema fails on the `id` keyword
+ * rather than on anything real. They are still copied and still orphan-checked, which
+ * is the point of them living in this tree; what they are validated *against* is their
+ * schema, and both languages' contract tests do that.
+ */
 function validateSchemas(files: string[]): string[] {
     const ajv = new Ajv2020({ strict: false, allErrors: true });
     addFormats.default(ajv);
     const failures: string[] = [];
 
-    for (const file of files) {
+    for (const file of files.filter((f) => !f.startsWith('fixtures/'))) {
         const content = readFileSync(join(TARGET_DIR, file), 'utf8');
         try {
             ajv.compile(JSON.parse(content));
@@ -121,7 +130,12 @@ function main(): void {
     if (existsSync(TARGET_DIR)) {
         const localFiles = walk(TARGET_DIR);
         for (const file of localFiles) {
-            if (!file.startsWith('fixtures/') && !files.includes(file)) {
+            // `fixtures/` used to be excluded here, which meant the golden fixtures
+            // could drift from the PHP side while this reported `orphaned: 0`. They now
+            // live in the source tree like everything else, so the check covers them —
+            // which is what makes "byte-identical to the SDK's" a mechanism rather than
+            // a claim in a docblock.
+            if (!files.includes(file)) {
                 orphans.push(file);
             }
         }
