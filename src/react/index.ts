@@ -26,6 +26,11 @@ export {
     type EchoLike,
 } from './use-notifications.js';
 export {
+    useAdminUsers,
+    type UseAdminUsersOptions,
+    type UseAdminUsersReturn,
+} from './use-admin-users.js';
+export {
     useStore,
     type UseStoreOptions,
     type UseStoreReturn,

@@ -47,6 +47,11 @@ const cases: Case[] = [
     { name: 'Pagination DTO', schema: 'dto/pagination.json', fixture: 'pagination.json' },
     { name: 'AppDescriptor DTO', schema: 'dto/app-descriptor.json', fixture: 'app-descriptor.json' },
     { name: 'SearchResult DTO', schema: 'dto/search-result.json', fixture: 'search-result.json' },
+    {
+        name: 'OrganisationMember DTO',
+        schema: 'dto/organisation-member.json',
+        fixture: 'organisation-member.json',
+    },
     { name: 'Event envelope', schema: 'events/_envelope.json', fixture: 'envelope.json' },
     { name: 'REST envelope', schema: 'http/envelope.json', fixture: 'envelope-rest.json' },
     { name: 'Problem details', schema: 'http/problem-details.json', fixture: 'problem-details.json' },
@@ -110,6 +115,18 @@ describe('multi-tenancy — org_id stays required', () => {
 
     it('user DTO without org_id is rejected', () => {
         expect(compile('dto/user.json')(without('user.json', 'org_id'))).toBe(false);
+    });
+
+    it('an organisation member row cannot carry a global user status', () => {
+        // The whole administration surface rests on the membership and the user being
+        // different things. `deleted` is a value `users.status` has and a membership
+        // does not, so accepting it here would let one organisation's screen present a
+        // platform-wide decision as its own.
+        const bad = {
+            ...loadJson<Record<string, unknown>>(join(FIXTURES_DIR, 'organisation-member.json')),
+            status: 'deleted',
+        };
+        expect(compile('dto/organisation-member.json')(bad)).toBe(false);
     });
 
     it('user JWT without org_id is rejected', () => {

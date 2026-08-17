@@ -1,5 +1,6 @@
 export type { User } from './user.js';
 export type { Tenant } from './tenant.js';
+export type { OrganisationMember, MembershipStatus } from './organisation-member.js';
 export type { Permission } from './permission.js';
 export { PERMISSION_NAME_REGEX } from './permission.js';
 export type { Role } from './role.js';
