@@ -10,7 +10,7 @@
  * Run `npm run sync-schemas` first to rule out drift, then investigate.
  */
 
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
@@ -52,6 +52,7 @@ const cases: Case[] = [
         schema: 'dto/organisation-member.json',
         fixture: 'organisation-member.json',
     },
+    { name: 'Organisation DTO', schema: 'dto/organisation.json', fixture: 'organisation.json' },
     { name: 'Event envelope', schema: 'events/_envelope.json', fixture: 'envelope.json' },
     { name: 'REST envelope', schema: 'http/envelope.json', fixture: 'envelope-rest.json' },
     { name: 'Problem details', schema: 'http/problem-details.json', fixture: 'problem-details.json' },
@@ -73,6 +74,19 @@ describe('schema ↔ fixture contract', () => {
             expect(ok).toBe(true);
         });
     }
+});
+
+describe('every fixture is actually validated', () => {
+    it('no fixture is missing from the case list', () => {
+        // The list above is hand-maintained, so a fixture added to `schemas/fixtures/`
+        // is synced by `sync-schemas`, validated on the PHP side, and validated *here*
+        // by nobody — the suite stays green while one side of the contract goes
+        // unchecked. That happened to `organisation.json` the moment it was added.
+        const onDisk = readdirSync(FIXTURES_DIR).filter((f) => f.endsWith('.json'));
+        const covered = new Set(cases.map((c) => c.fixture));
+
+        expect(onDisk.filter((f) => !covered.has(f))).toEqual([]);
+    });
 });
 
 describe('regression — fixture changes do not silently break', () => {
