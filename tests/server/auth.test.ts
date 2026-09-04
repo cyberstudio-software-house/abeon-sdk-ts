@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { SignJWT, exportJWK, generateKeyPair, importJWK, type CryptoKey, type JWK } from 'jose';
+import { SignJWT, exportJWK, generateKeyPair, importJWK, type JWK } from 'jose';
 import {
     getServerAuthContext,
     refreshTokenIfExpired,
@@ -8,13 +8,13 @@ import {
 } from '../../src/server/index.js';
 import type { CookieReader } from '../../src/_internal/cookies.js';
 
-let privateKey: CryptoKey;
+let privateKey: globalThis.CryptoKey;
 let publicJwk: JWK;
 let jwks: JwksFn;
 
 beforeAll(async () => {
     const pair = await generateKeyPair('RS256', { extractable: true });
-    privateKey = pair.privateKey as CryptoKey;
+    privateKey = pair.privateKey as globalThis.CryptoKey;
     publicJwk = await exportJWK(pair.publicKey);
     publicJwk.kid = 'test-key';
     publicJwk.alg = 'RS256';

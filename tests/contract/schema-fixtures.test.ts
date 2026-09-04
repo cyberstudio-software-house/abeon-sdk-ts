@@ -16,6 +16,7 @@ import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
 import type { ValidateFunction } from 'ajv';
 import { describe, expect, it } from 'vitest';
+import type { OrganisationMember, Role } from '../../src/types/index.js';
 
 const SCHEMAS_DIR = join(__dirname, '..', '..', 'schemas');
 const FIXTURES_DIR = join(SCHEMAS_DIR, 'fixtures');
@@ -75,6 +76,43 @@ describe('schema ↔ fixture contract', () => {
             expect(ok).toBe(true);
         });
     }
+});
+
+describe('the exported types match the schemas', () => {
+    // The schemas are pinned against golden fixtures on both sides, and until 2026-09-04
+    // nothing pinned the *types* against the schemas — so `Role` shipped as
+    // `{name, permissions}` while `dto/role.json` required `label` and offered `system`,
+    // and a consumer typing the endpoint's response lost the two fields it exists to
+    // supply. They drifted on the day the schema was written.
+    //
+    // The guard is a literal assigned to the exported type: TypeScript's excess-property
+    // check fails at `tsc` time if the type is missing a field, and the same literal is
+    // validated against the schema here, so neither side can move alone.
+
+    it('Role carries every field its schema declares', () => {
+        const role: Role = {
+            name: 'admin',
+            label: 'Administrator',
+            permissions: ['core.users.manage'],
+            system: true,
+        };
+
+        expect(compile('dto/role.json')(role)).toBe(true);
+    });
+
+    it('OrganisationMember carries every field its schema declares', () => {
+        const member: OrganisationMember = {
+            id: '42',
+            email: 'viewer@abeon.dev',
+            name: 'Viewer',
+            status: 'suspended',
+            roles: ['viewer'],
+            joined_at: '2026-03-01T09:15:00+00:00',
+            last_used_at: null,
+        };
+
+        expect(compile('dto/organisation-member.json')(member)).toBe(true);
+    });
 });
 
 describe('every fixture is actually validated', () => {

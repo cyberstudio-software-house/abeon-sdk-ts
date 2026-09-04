@@ -90,7 +90,7 @@ function fakeApi(options: FakeApiOptions = {}) {
         byOrg[orgId] = list.map((m) =>
             m.id === id ? { ...m, status: (body as { status: OrganisationMember['status'] }).status } : m,
         );
-        return { data: byOrg[orgId].find((m) => m.id === id) };
+        return { data: (byOrg[orgId] ?? []).find((m) => m.id === id) };
     });
 
     const reject = async () => {

@@ -1,0 +1,10 @@
+{
+    "//": "Type-checks the test and script trees, which `tsconfig.json` excludes because it also emits `dist/`. Without this the contract test's compile-time guard — a literal assigned to an exported type, so a missing field is a tsc error — is never checked and silently guards nothing. Found exactly that way.",
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "noEmit": true,
+        "rootDir": "."
+    },
+    "include": ["src/**/*", "tests/**/*", "scripts/**/*"],
+    "exclude": ["dist", "node_modules"]
+}
