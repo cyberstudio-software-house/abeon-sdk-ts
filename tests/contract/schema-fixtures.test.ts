@@ -53,6 +53,7 @@ const cases: Case[] = [
         fixture: 'organisation-member.json',
     },
     { name: 'Organisation DTO', schema: 'dto/organisation.json', fixture: 'organisation.json' },
+    { name: 'Role DTO', schema: 'dto/role.json', fixture: 'role.json' },
     { name: 'Event envelope', schema: 'events/_envelope.json', fixture: 'envelope.json' },
     { name: 'REST envelope', schema: 'http/envelope.json', fixture: 'envelope-rest.json' },
     { name: 'Problem details', schema: 'http/problem-details.json', fixture: 'problem-details.json' },
