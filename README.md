@@ -136,3 +136,14 @@ Peer (optional):
 ## License
 
 Proprietary — internal to the Abeon Unified platform.
+
+## `dist/` is built on install
+
+`dist/` is gitignored and `main` points into it, so a consumer that links this package with
+`file:` resolves it to a directory that may not exist. `npm ci` then succeeds and every later
+build, test and typecheck fails on `Could not resolve ./components/...`, which reads as a broken
+package rather than a missing build step.
+
+The `prepare` script closes that: npm runs it for a `file:` dependency, which `prepublishOnly`
+does not. Nothing in the platform now depends on somebody remembering to build two sibling
+repositories in the right order before touching an application.
