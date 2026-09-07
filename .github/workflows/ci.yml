@@ -11,34 +11,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout abeon-shared
+      - name: Checkout abeon-sdk-ts
         uses: actions/checkout@v4
         with:
-          path: abeon-shared
+          path: abeon-sdk-ts
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: abeon-shared/package-lock.json
+          cache-dependency-path: abeon-sdk-ts/package-lock.json
 
       - name: Install
-        working-directory: abeon-shared
+        working-directory: abeon-sdk-ts
         run: npm ci
 
       - name: Lint
-        working-directory: abeon-shared
+        working-directory: abeon-sdk-ts
         run: npm run lint
 
       - name: Typecheck
-        working-directory: abeon-shared
+        working-directory: abeon-sdk-ts
         run: npm run typecheck
 
       - name: Test
-        working-directory: abeon-shared
+        working-directory: abeon-sdk-ts
         run: npm test
 
       - name: Build
-        working-directory: abeon-shared
+        working-directory: abeon-sdk-ts
         run: npm run build

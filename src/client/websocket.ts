@@ -62,14 +62,14 @@ export function createEcho(options: EchoOptions = {}): Echo<'reverb'> {
     const key = options.key ?? readEnv(ENV.PUSHER_KEY);
     if (!key) {
         throw new Error(
-            `@abeon/shared/client: Pusher/Reverb key required (set ${ENV.PUSHER_KEY} or pass options.key)`,
+            `@abeon/sdk-ts/client: Pusher/Reverb key required (set ${ENV.PUSHER_KEY} or pass options.key)`,
         );
     }
 
     const wsUrl = options.wsUrl ?? readEnv(ENV.WS_URL);
     if (!wsUrl) {
         throw new Error(
-            `@abeon/shared/client: WebSocket URL required (set ${ENV.WS_URL} or pass options.wsUrl)`,
+            `@abeon/sdk-ts/client: WebSocket URL required (set ${ENV.WS_URL} or pass options.wsUrl)`,
         );
     }
 

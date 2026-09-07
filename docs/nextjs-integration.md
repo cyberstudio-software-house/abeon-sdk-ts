@@ -1,6 +1,6 @@
 # Next.js integration
 
-Wzorce setup-u `@abeon/shared` w aplikacji Next.js 15 (App Router) — auth flow, SSR ↔ CSR, basePath, WebSocket. Wszystkie przykłady działają z PHP-owym `abeon/sdk` po stronie backendu.
+Wzorce setup-u `@abeon/sdk-ts` w aplikacji Next.js 15 (App Router) — auth flow, SSR ↔ CSR, basePath, WebSocket. Wszystkie przykłady działają z PHP-owym `abeon/sdk` po stronie backendu.
 
 ## 1. Env vars
 
@@ -37,7 +37,7 @@ module.exports = {
 
 ```ts
 import { NextResponse, type NextRequest } from 'next/server';
-import { getServerAuthContext, refreshTokenIfExpired } from '@abeon/shared/server';
+import { getServerAuthContext, refreshTokenIfExpired } from '@abeon/sdk-ts/server';
 
 export async function middleware(req: NextRequest) {
     const cookies = req.cookies as unknown as Parameters<typeof getServerAuthContext>[0];
@@ -71,8 +71,8 @@ export const config = {
 
 ```tsx
 import { cookies } from 'next/headers';
-import { getServerAuthContext } from '@abeon/shared/server';
-import { AbeonProvider } from '@abeon/shared/react';
+import { getServerAuthContext } from '@abeon/sdk-ts/server';
+import { AbeonProvider } from '@abeon/sdk-ts/react';
 
 export default async function RootLayout({
     children,
@@ -96,8 +96,8 @@ export default async function RootLayout({
 
 ```tsx
 import { cookies, headers } from 'next/headers';
-import { createServerApiClient } from '@abeon/shared/server';
-import type { User } from '@abeon/shared';
+import { createServerApiClient } from '@abeon/sdk-ts/server';
+import type { User } from '@abeon/sdk-ts';
 
 export default async function ProfilePage() {
     const api = createServerApiClient(cookies(), headers());
@@ -114,7 +114,7 @@ export default async function ProfilePage() {
 
 ```tsx
 'use client';
-import { useAuth, useApi } from '@abeon/shared/react';
+import { useAuth, useApi } from '@abeon/sdk-ts/react';
 import { useEffect, useState } from 'react';
 import type { Contact } from '@/types';
 
@@ -139,7 +139,7 @@ export function ContactsList() {
 
 ```tsx
 'use client';
-import { useApps } from '@abeon/shared/react';
+import { useApps } from '@abeon/sdk-ts/react';
 import { AppSwitcher } from '@abeon/ui';
 
 export function Sidebar() {
@@ -156,8 +156,8 @@ Source of truth: PHP `Abeon\SDK\Services\ServiceRegistry::list()` exposed at `/a
 ```tsx
 'use client';
 import { useEffect, useMemo } from 'react';
-import { createEcho } from '@abeon/shared/client';
-import { useNotifications } from '@abeon/shared/react';
+import { createEcho } from '@abeon/sdk-ts/client';
+import { useNotifications } from '@abeon/sdk-ts/react';
 import { NotificationCenter } from '@abeon/ui';
 
 export function TopbarBell() {
@@ -205,7 +205,7 @@ This wires Echo's `/broadcasting/auth` POST through `AuthMiddleware` so Reverb a
 
 ## Gotchas
 
-- **`req.cookies` vs `cookies()`**: in middleware use `req.cookies` (RequestCookies). In Server Components use `cookies()` from `next/headers` (ReadonlyRequestCookies). Both satisfy the `CookieReader` interface duck-typed by `@abeon/shared/server`.
+- **`req.cookies` vs `cookies()`**: in middleware use `req.cookies` (RequestCookies). In Server Components use `cookies()` from `next/headers` (ReadonlyRequestCookies). Both satisfy the `CookieReader` interface duck-typed by `@abeon/sdk-ts/server`.
 - **`process.env.NEXT_PUBLIC_*`**: only `NEXT_PUBLIC_`-prefixed vars are exposed to client bundle. Server-only vars (`ABEON_INTERNAL_API_URL`, `ABEON_JWKS_URL`) are stripped in client builds.
 - **Hydration mismatch**: always pass `initialAuth` from SSR to `AbeonProvider`. Without it, server renders "logged in" while client first paints "logged out" → React warns.
 - **basePath in Echo authEndpoint**: `createEcho()` joins `NEXT_PUBLIC_ABEON_BASE_PATH` automatically. Override with `authEndpoint` option only if your backend is mounted differently.
@@ -215,4 +215,4 @@ This wires Echo's `/broadcasting/auth` POST through `AuthMiddleware` so Reverb a
 
 - [ADR-0001 (PHP SDK)](../../abeon-sdk-php/docs/adr/0001-jwt-format.md) — JWT format, cookie ↔ Authorization translation responsibility.
 - [ADR-0003 (PHP SDK)](../../abeon-sdk-php/docs/adr/0003-correlation-id.md) — Correlation ID propagation.
-- [Phase 0 plan](../../abeon-shared-phase0-plan.md) — V1 / V3 / V4 / V5 fix references.
+- [Phase 0 plan](../../abeon-sdk-ts-phase0-plan.md) — V1 / V3 / V4 / V5 fix references.

@@ -1,4 +1,4 @@
-// Types-only barrel. Importing from `@abeon/shared` is safe in any context
+// Types-only barrel. Importing from `@abeon/sdk-ts` is safe in any context
 // (Node, browser, edge) — no runtime side effects, no Node-only imports.
 
 export * from './types/index.js';

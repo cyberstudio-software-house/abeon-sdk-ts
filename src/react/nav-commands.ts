@@ -3,7 +3,7 @@ import { useRegisterCommands, type Command } from './command-registry.js';
 
 /**
  * Minimal nav entry shape consumed by {@link buildNavCommands}. Deliberately
- * structural (not `@abeon/ui`'s `NavGroup`) so `@abeon/shared` keeps no
+ * structural (not `@abeon/ui`'s `NavGroup`) so `@abeon/sdk-ts` keeps no
  * dependency on the UI package — callers map their own nav config to this.
  */
 export interface NavCommandItem {

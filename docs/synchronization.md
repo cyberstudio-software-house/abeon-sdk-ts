@@ -1,6 +1,6 @@
 # Synchronization — PHP ↔ TS contract
 
-This document captures how the canonical JSON schemas stay aligned between `abeon-sdk-php` (source of truth) and `abeon-shared` (vendored copy + hand-written TS types).
+This document captures how the canonical JSON schemas stay aligned between `abeon-sdk-php` (source of truth) and `abeon-sdk-ts` (vendored copy + hand-written TS types).
 
 ## Source of truth
 
@@ -42,12 +42,12 @@ Scenario: you need to add a new field to `User` DTO.
 
 3. **Sync to TS**:
    ```bash
-   cd abeon-shared
+   cd abeon-sdk-ts
    npm run sync-schemas
    ```
    Output shows `modified: 1 (dto/user.json)`.
 
-4. **Update TS type** in `abeon-shared/src/types/user.ts`:
+4. **Update TS type** in `abeon-sdk-ts/src/types/user.ts`:
    ```diff
      export interface User {
          id: string;
@@ -56,7 +56,7 @@ Scenario: you need to add a new field to `User` DTO.
      }
    ```
 
-5. **Update fixture** in `abeon-shared/schemas/fixtures/user.json` (and the equivalent in PHP repo if maintained separately):
+5. **Update fixture** in `abeon-sdk-ts/schemas/fixtures/user.json` (and the equivalent in PHP repo if maintained separately):
    ```diff
      {
        "id": "42",
@@ -79,7 +79,7 @@ Scenario: you need to add a new field to `User` DTO.
 
 - Reads `../abeon-sdk-php/schemas/` recursively.
 - For each `*.json`, validates it parses as JSON Schema 2020-12 via ajv.
-- Copies to `abeon-shared/schemas/` preserving directory structure.
+- Copies to `abeon-sdk-ts/schemas/` preserving directory structure.
 - Reports added / modified / unchanged / invalid-JSON / orphaned files.
 - Skips `fixtures/` from orphan detection (TS may maintain extra test fixtures).
 
@@ -90,11 +90,11 @@ Modes:
 | `npm run sync-schemas` | Default — copy + report. Run after editing PHP schemas. |
 | `npm run sync-schemas:check` | CI mode — no writes. Exit 1 on drift. |
 
-CI workflow (`/.github/workflows/ci.yml`) checks out **both** `abeon-shared` and `abeon-sdk-php` as sibling directories and runs `sync-schemas:check`. Drift = red CI.
+CI workflow (`/.github/workflows/ci.yml`) checks out **both** `abeon-sdk-ts` and `abeon-sdk-php` as sibling directories and runs `sync-schemas:check`. Drift = red CI.
 
 ## Versioning
 
-`@abeon/shared` follows SemVer paired with `abeon/sdk`:
+`@abeon/sdk-ts` follows SemVer paired with `abeon/sdk`:
 
 - **Same major version** = same contract era (1.x ↔ 1.x).
 - **Additive change** in schema (new optional field) → minor bump in BOTH repos.
@@ -126,6 +126,6 @@ Per-domain event schemas (e.g. `crm.contact.created.json`) live in **each servic
 
 ## Related
 
-- [Phase 0 plan §H](../../abeon-shared-phase0-plan.md) — synchronization decision in TS plan.
+- [Phase 0 plan §H](../../abeon-sdk-ts-phase0-plan.md) — synchronization decision in TS plan.
 - [ADR-0002 (PHP SDK)](../../abeon-sdk-php/docs/adr/0002-event-envelope.md) — envelope contract.
 - [PHP events catalog](../../abeon-sdk-php/docs/events-catalog.md) — federation convention for per-event payload schemas.

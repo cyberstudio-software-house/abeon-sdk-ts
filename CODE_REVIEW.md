@@ -1,4 +1,4 @@
-# Code Review — `@abeon/shared` (Phase 0)
+# Code Review — `@abeon/sdk-ts` (Phase 0)
 
 **Reviewer:** Michał Mucha (z udziałem 3 równoległych code-analyst agentów)
 **Date:** 2026-05-15
@@ -151,7 +151,7 @@ if (typeof window !== 'undefined') {
     const w = window as unknown as { Pusher?: typeof Pusher };
     if (w.Pusher && w.Pusher !== Pusher) {
         console.warn(
-            '[@abeon/shared] window.Pusher already defined with different reference. ' +
+            '[@abeon/sdk-ts] window.Pusher already defined with different reference. ' +
             'Echo will use the existing instance. ' +
             'Pass options.pusherClass to createEcho() to disable this assignment.',
         );
@@ -598,7 +598,7 @@ Same reasoning jako Rejected #3. baseUrl z env = trusted.
 
 **Claim:** Brak per-user throttling w refreshTokenIfExpired umożliwia DoS Auth.
 
-**Reality:** Rate-limit to architectural/operations concern (Traefik middleware, Auth-side rate limiter, K8s NetworkPolicy). Nie odpowiedzialność `@abeon/shared`. Adding per-process token cache (in-memory) komplikuje SSR (one process per request w niektórych deployment-ach).
+**Reality:** Rate-limit to architectural/operations concern (Traefik middleware, Auth-side rate limiter, K8s NetworkPolicy). Nie odpowiedzialność `@abeon/sdk-ts`. Adding per-process token cache (in-memory) komplikuje SSR (one process per request w niektórych deployment-ach).
 
 **Verdict:** Reject — out of scope.
 
@@ -686,7 +686,7 @@ L1-L7 + opcjonalne: ESLint `no-explicit-any` rule, JSDoc examples na regex, type
 
 ## Conclusion
 
-`@abeon/shared` jest **architectonicznie solid** i **dobrze otestowany** (80 tests). C1 to realny bug (provider memoization) który musi być naprawiony przed pierwszym Next.js boilerplate-em. H1-H5 to defense-in-depth + correctness wins, prosty do aplikowania. M i L to inkrementalne polish.
+`@abeon/sdk-ts` jest **architectonicznie solid** i **dobrze otestowany** (80 tests). C1 to realny bug (provider memoization) który musi być naprawiony przed pierwszym Next.js boilerplate-em. H1-H5 to defense-in-depth + correctness wins, prosty do aplikowania. M i L to inkrementalne polish.
 
 **Production-readiness:** **Po fixie C1 + H1-H5 (~2.5 dnia w Sprint E) — gotowe do produkcji** dla pierwszego konsumenta (CMS / AI Assistant Next.js). Pozostałe findings można aplikować inkrementalnie podczas tight-loop hardening z pierwszymi 2 boilerplate-ami (zgodnie z S.5 filozofią z code review SDK PHP).
 
@@ -697,5 +697,5 @@ L1-L7 + opcjonalne: ESLint `no-explicit-any` rule, JSDoc examples na regex, type
 ## Załączniki
 
 - Pełne raw outputy 3 review-ów zapisane w `/home/mmucha/.claude/projects/-home-mmucha-projects-abeon-suit/ff2e62d7-5df7-4470-bc56-785595d3e569/tool-results/`.
-- Cross-references do `file:line` w `abeon-shared/src/`.
-- Wcześniejsze docs: `../abeon-shared-phase0-plan.md` (v1.1 z V1-V5), `../abeon-sdk-php/CODE_REVIEW.md` (companion PHP-side review).
+- Cross-references do `file:line` w `abeon-sdk-ts/src/`.
+- Wcześniejsze docs: `../abeon-sdk-ts-phase0-plan.md` (v1.1 z V1-V5), `../abeon-sdk-php/CODE_REVIEW.md` (companion PHP-side review).

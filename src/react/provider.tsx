@@ -22,15 +22,15 @@ export interface AbeonProviderProps {
 }
 
 /**
- * Root context provider for `@abeon/shared/react` hooks (`useAuth`, `useApi`,
+ * Root context provider for `@abeon/sdk-ts/react` hooks (`useAuth`, `useApi`,
  * `useApps`, `useNotifications` in Sprint D).
  *
  * Place high in the tree — Next.js root layout or Inertia App component:
  *
  *     // app/layout.tsx (Next.js App Router)
  *     import { cookies } from 'next/headers';
- *     import { getServerAuthContext } from '@abeon/shared/server';
- *     import { AbeonProvider } from '@abeon/shared/react';
+ *     import { getServerAuthContext } from '@abeon/sdk-ts/server';
+ *     import { AbeonProvider } from '@abeon/sdk-ts/react';
  *
  *     export default async function RootLayout({ children }) {
  *         const { user } = await getServerAuthContext(cookies());

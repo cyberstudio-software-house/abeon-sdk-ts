@@ -35,7 +35,7 @@ export function createApiClient(options: CreateApiClientOptions = {}): ApiClient
 
     if (!baseUrl) {
         throw new Error(
-            `@abeon/shared/client: baseUrl required (set ${ENV.PUBLIC_API_URL} or pass explicit option)`,
+            `@abeon/sdk-ts/client: baseUrl required (set ${ENV.PUBLIC_API_URL} or pass explicit option)`,
         );
     }
 

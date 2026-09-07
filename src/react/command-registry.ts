@@ -127,7 +127,7 @@ export function useRegisterCommands(commands: Command[]): void {
     const ctx = useContext(CommandRegistryContext);
     if (!ctx) {
         throw new Error(
-            '@abeon/shared/react: useRegisterCommands() must be used inside <CommandRegistryProvider>',
+            '@abeon/sdk-ts/react: useRegisterCommands() must be used inside <CommandRegistryProvider>',
         );
     }
     useEffect(() => {
@@ -145,7 +145,7 @@ export function useCommandRegistry(): CommandRegistryValue {
     const ctx = useContext(CommandRegistryContext);
     if (!ctx) {
         throw new Error(
-            '@abeon/shared/react: useCommandRegistry() must be used inside <CommandRegistryProvider>',
+            '@abeon/sdk-ts/react: useCommandRegistry() must be used inside <CommandRegistryProvider>',
         );
     }
     const [version, setVersion] = useState<number>(0);

@@ -1,22 +1,22 @@
 # Inertia + Laravel integration
 
-For apps where the Laravel backend renders Inertia React (variant B from arch doc), the `@abeon/shared` surface is **smaller** — Laravel already handles auth via Inertia shared props, no separate SSR flow.
+For apps where the Laravel backend renders Inertia React (variant B from arch doc), the `@abeon/sdk-ts` surface is **smaller** — Laravel already handles auth via Inertia shared props, no separate SSR flow.
 
 ## Stack assumptions
 
 - Laravel 11+ with `abeon/sdk` (PHP) installed.
 - Inertia.js + React adapter on the frontend.
 - Vite as the bundler (Laravel default).
-- `@abeon/ui` for components, `@abeon/shared` for types and hooks.
+- `@abeon/ui` for components, `@abeon/sdk-ts` for types and hooks.
 
-## What you use from `@abeon/shared`
+## What you use from `@abeon/sdk-ts`
 
 | Subpath | What's used |
 |---|---|
-| `@abeon/shared` | All types (`User`, `Permission`, `EventEnvelope`, `ProblemDetails`, …) for typing Inertia props. Errors and constants. |
-| `@abeon/shared/client` | `createApiClient()` for occasional same-origin AJAX calls outside Inertia. `createEcho()` for WebSocket. |
-| `@abeon/shared/react` | `<AbeonProvider>` (fed from Inertia shared props), `useAuth`, `useApi`, `useApps`, `useNotifications`. |
-| `@abeon/shared/server` | **NOT USED** — Laravel server is PHP, not Node. JWT verification happens via `Abeon\SDK\Auth\AuthMiddleware`. |
+| `@abeon/sdk-ts` | All types (`User`, `Permission`, `EventEnvelope`, `ProblemDetails`, …) for typing Inertia props. Errors and constants. |
+| `@abeon/sdk-ts/client` | `createApiClient()` for occasional same-origin AJAX calls outside Inertia. `createEcho()` for WebSocket. |
+| `@abeon/sdk-ts/react` | `<AbeonProvider>` (fed from Inertia shared props), `useAuth`, `useApi`, `useApps`, `useNotifications`. |
+| `@abeon/sdk-ts/server` | **NOT USED** — Laravel server is PHP, not Node. JWT verification happens via `Abeon\SDK\Auth\AuthMiddleware`. |
 
 ## 1. Inertia shared props (Laravel side)
 
@@ -33,7 +33,7 @@ public function share(Request $request): array
 }
 ```
 
-The shared `abeon.user` payload mirrors `Abeon\SDK\DTO\User::toArray()` — same shape as the `User` TS type in `@abeon/shared`.
+The shared `abeon.user` payload mirrors `Abeon\SDK\DTO\User::toArray()` — same shape as the `User` TS type in `@abeon/sdk-ts`.
 
 ## 2. React entry — fed by Inertia
 
@@ -41,8 +41,8 @@ The shared `abeon.user` payload mirrors `Abeon\SDK\DTO\User::toArray()` — same
 // resources/js/app.tsx
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
-import { AbeonProvider } from '@abeon/shared/react';
-import type { User } from '@abeon/shared';
+import { AbeonProvider } from '@abeon/sdk-ts/react';
+import type { User } from '@abeon/sdk-ts';
 
 interface AbeonProps {
     user: User | null;
@@ -65,7 +65,7 @@ createInertiaApp({
 ## 3. Components consume `useAuth`
 
 ```tsx
-import { useAuth } from '@abeon/shared/react';
+import { useAuth } from '@abeon/sdk-ts/react';
 import { Head } from '@inertiajs/react';
 
 export default function Dashboard() {
@@ -91,8 +91,8 @@ When you bypass Inertia and use `createApiClient()` directly (rare), the same fl
 The Echo setup from [nextjs-integration.md](nextjs-integration.md) works identically:
 
 ```tsx
-import { createEcho } from '@abeon/shared/client';
-import { useNotifications } from '@abeon/shared/react';
+import { createEcho } from '@abeon/sdk-ts/client';
+import { useNotifications } from '@abeon/sdk-ts/react';
 
 const echo = useMemo(() => createEcho({}), []);
 const { notifications, markAsRead } = useNotifications({ echo });
@@ -103,7 +103,7 @@ Cookie-based auth → broadcasting auth at `/broadcasting/auth` → Reverb autho
 ## 6. App registry — `useApps`
 
 ```tsx
-import { useApps } from '@abeon/shared/react';
+import { useApps } from '@abeon/sdk-ts/react';
 import { AppSwitcher } from '@abeon/ui';
 
 export function AppSidebar() {

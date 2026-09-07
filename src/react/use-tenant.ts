@@ -73,7 +73,7 @@ function useTenantState(options: UseTenantOptions = {}): UseTenantReturn {
     const api = useApi();
     const ctx = useContext(AbeonContext);
     if (!ctx) {
-        throw new Error('@abeon/shared/react: useTenant() must be used inside <AbeonProvider>');
+        throw new Error('@abeon/sdk-ts/react: useTenant() must be used inside <AbeonProvider>');
     }
 
     const path = options.path ?? '/api/v1/auth/tenants';

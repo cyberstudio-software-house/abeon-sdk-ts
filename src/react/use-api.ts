@@ -19,7 +19,7 @@ export function useApi(): ApiClient {
     const ctx = useContext(AbeonContext);
     if (!ctx) {
         throw new Error(
-            '@abeon/shared/react: useApi() must be used inside <AbeonProvider>',
+            '@abeon/sdk-ts/react: useApi() must be used inside <AbeonProvider>',
         );
     }
     return ctx.apiClient;

@@ -1,9 +1,35 @@
 # Changelog
 
-All notable changes to `@abeon/shared` are documented here.
+All notable changes to `@abeon/sdk-ts` are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/); this package is pre-1.0.
 
 ## [Unreleased]
+
+### 2026-09-07 — renamed from `abeon-shared` / `@abeon/shared`
+
+Three names changed together, because the gap between them was the problem:
+
+| | Before | After |
+|---|---|---|
+| directory | `abeon-shared/` | `abeon-sdk-ts/` |
+| GitHub repository | `cyberstudio-software-house/abeon-shared` | `…/abeon-sdk-ts` |
+| npm package | `@abeon/shared` | `@abeon/sdk-ts` |
+
+This package is the platform's **TypeScript SDK** — the counterpart to `abeon-sdk-php`. "Shared" said
+that something was shared, not what it was, and the asymmetry showed every time the two were named
+together.
+
+All three moved at once deliberately. `abeon-ui` already carries three names for one thing — the
+directory `abeon-ui`, the published package `@cyberstudio-software-house/ui`, and the `@abeon/ui`
+Vite alias — and that has cost time at least once. Repeating the pattern here would have imported a
+known problem into a second place.
+
+**No published version is affected.** The package is `private: true` and has never been published, so
+there is nothing in a registry under the old name.
+
+Every entry below this one was written while the package was called `@abeon/shared`. The names in
+them were updated so the document reads consistently; the history of what changed and when is
+unaffected.
 
 ### 2026-08-12 — tenant state and switching (ADR-0016 / ADR-0017)
 

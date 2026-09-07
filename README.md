@@ -1,4 +1,4 @@
-# @abeon/shared
+# @abeon/sdk-ts
 
 TypeScript counterpart to [`abeon/sdk`](../abeon-sdk-php) — shared types,
 helpers, and React hooks for Abeon Unified frontends (Next.js, Laravel + Inertia).
@@ -7,12 +7,12 @@ helpers, and React hooks for Abeon Unified frontends (Next.js, Laravel + Inertia
 
 | Subpath | Contents |
 |---|---|
-| `@abeon/shared` | Types-only barrel (User, Permission, EventEnvelope, ProblemDetails, …), errors, constants, mappers. Safe in any environment. |
-| `@abeon/shared/client` | Browser-only: `createApiClient` (native fetch wrapper, CSRF, correlation), `createEcho` (Laravel Echo + Reverb). |
-| `@abeon/shared/server` | Node-only: `createServerApiClient(cookies, headers)`, `getServerAuthContext`, `refreshTokenIfExpired`, JWKS cache. |
-| `@abeon/shared/react` | React provider + hooks: `<AbeonProvider>`, `useAuth`, `useApi`, `useApps` (V4), `useNotifications`. |
+| `@abeon/sdk-ts` | Types-only barrel (User, Permission, EventEnvelope, ProblemDetails, …), errors, constants, mappers. Safe in any environment. |
+| `@abeon/sdk-ts/client` | Browser-only: `createApiClient` (native fetch wrapper, CSRF, correlation), `createEcho` (Laravel Echo + Reverb). |
+| `@abeon/sdk-ts/server` | Node-only: `createServerApiClient(cookies, headers)`, `getServerAuthContext`, `refreshTokenIfExpired`, JWKS cache. |
+| `@abeon/sdk-ts/react` | React provider + hooks: `<AbeonProvider>`, `useAuth`, `useApi`, `useApps` (V4), `useNotifications`. |
 
-Tree-shake-friendly via `package.json` `exports` field and `sideEffects: false`. Importing `@abeon/shared/server` never pulls Node-only code into a browser bundle.
+Tree-shake-friendly via `package.json` `exports` field and `sideEffects: false`. Importing `@abeon/sdk-ts/server` never pulls Node-only code into a browser bundle.
 
 ## Status
 
@@ -23,12 +23,12 @@ Tree-shake-friendly via `package.json` `exports` field and `sideEffects: false`.
 - React layer (provider, hooks, app registry).
 - WebSocket (Laravel Echo + Reverb), notifications, complete docs.
 
-See [`../abeon-shared-phase0-plan.md`](../abeon-shared-phase0-plan.md) for the plan history.
+See [`../abeon-sdk-ts-phase0-plan.md`](../abeon-sdk-ts-phase0-plan.md) for the plan history.
 
 ## Installation
 
 ```bash
-npm install @abeon/shared
+npm install @abeon/sdk-ts
 ```
 
 Published to GitHub Packages (`https://npm.pkg.github.com`). Configure `.npmrc` in your consumer app:
@@ -45,8 +45,8 @@ Published to GitHub Packages (`https://npm.pkg.github.com`). Configure `.npmrc` 
 ```tsx
 // app/page.tsx (Server Component)
 import { cookies, headers } from 'next/headers';
-import { createServerApiClient } from '@abeon/shared/server';
-import type { User } from '@abeon/shared';
+import { createServerApiClient } from '@abeon/sdk-ts/server';
+import type { User } from '@abeon/sdk-ts';
 
 export default async function Profile() {
     const api = createServerApiClient(cookies(), headers());
@@ -59,7 +59,7 @@ export default async function Profile() {
 
 ```tsx
 'use client';
-import { useAuth, useApi } from '@abeon/shared/react';
+import { useAuth, useApi } from '@abeon/sdk-ts/react';
 
 export function Page() {
     const { user, hasPermission } = useAuth();
@@ -75,8 +75,8 @@ export function Page() {
 ```tsx
 'use client';
 import { useMemo, useEffect } from 'react';
-import { createEcho } from '@abeon/shared/client';
-import { useNotifications } from '@abeon/shared/react';
+import { createEcho } from '@abeon/sdk-ts/client';
+import { useNotifications } from '@abeon/sdk-ts/react';
 
 export function Bell() {
     const echo = useMemo(() => createEcho({}), []);
@@ -107,8 +107,8 @@ PHP DTOs and TS types are written by hand from the same schemas; contract tests 
 
 ## Naming
 
-- **Folder:** `abeon-shared` (sibling of `abeon-sdk-php`, no `-ts` suffix — single-language stack).
-- **npm package:** `@abeon/shared`.
+- **Folder:** `abeon-sdk-ts` (sibling of `abeon-sdk-php`, no `-ts` suffix — single-language stack).
+- **npm package:** `@abeon/sdk-ts`.
 
 ## Development
 
@@ -130,8 +130,8 @@ Runtime:
 
 Peer (optional):
 
-- `react` ^19 — required when using `@abeon/shared/react`
-- `react-dom` ^19 — required when using `@abeon/shared/react`
+- `react` ^19 — required when using `@abeon/sdk-ts/react`
+- `react-dom` ^19 — required when using `@abeon/sdk-ts/react`
 
 ## License
 

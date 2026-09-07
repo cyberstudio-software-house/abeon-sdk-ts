@@ -39,7 +39,7 @@ export interface GetServerAuthContextOptions {
  * In Next.js App Router:
  *
  *     import { cookies } from 'next/headers';
- *     import { getServerAuthContext } from '@abeon/shared/server';
+ *     import { getServerAuthContext } from '@abeon/sdk-ts/server';
  *
  *     export async function middleware(req: NextRequest) {
  *         const { user } = await getServerAuthContext(req.cookies);
@@ -198,7 +198,7 @@ function resolveJwks(jwksUrl: string | undefined): JwksFn {
     const url = jwksUrl ?? readEnv(ENV.JWKS_URL);
     if (!url) {
         throw new Error(
-            `@abeon/shared/server: jwks not configured (set ${ENV.JWKS_URL} env or pass options.jwks / options.jwksUrl)`,
+            `@abeon/sdk-ts/server: jwks not configured (set ${ENV.JWKS_URL} env or pass options.jwks / options.jwksUrl)`,
         );
     }
     return getJwks(url);

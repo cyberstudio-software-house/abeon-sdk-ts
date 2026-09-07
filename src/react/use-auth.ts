@@ -33,7 +33,7 @@ export function useAuth(): UseAuthReturn {
     const ctx = useContext(AbeonContext);
     if (!ctx) {
         throw new Error(
-            '@abeon/shared/react: useAuth() must be used inside <AbeonProvider>',
+            '@abeon/sdk-ts/react: useAuth() must be used inside <AbeonProvider>',
         );
     }
     return {

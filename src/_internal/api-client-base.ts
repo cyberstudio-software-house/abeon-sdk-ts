@@ -38,7 +38,7 @@ export function buildApiClient(config: ApiClientConfig): ApiClient {
     const fetchImpl = config.fetchImpl ?? globalThis.fetch;
     if (!fetchImpl) {
         throw new Error(
-            '@abeon/shared: no fetch available — pass `fetchImpl` in config or run on Node 18+',
+            '@abeon/sdk-ts: no fetch available — pass `fetchImpl` in config or run on Node 18+',
         );
     }
 

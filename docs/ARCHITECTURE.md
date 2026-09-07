@@ -1,4 +1,4 @@
-# `@abeon/shared` — Architecture
+# `@abeon/sdk-ts` — Architecture
 
 **Version:** 0.2 (Phase 0.5 chrome additions on top of Sprint A–D baseline)
 **Status:** Sprint A–D complete + chrome data layer added; 136 Vitest tests green; `tsc --noEmit` clean
@@ -24,7 +24,7 @@ evaluating changes that touch the cross-package contract.
 
 ## 1. Purpose
 
-`@abeon/shared` is the **frontend half** of the Abeon Unified cross-service
+`@abeon/sdk-ts` is the **frontend half** of the Abeon Unified cross-service
 contract. Every Abeon service that has a React frontend (11 Inertia apps +
 4 Next.js apps + future chrome consumers) installs this package and uses
 its types, helpers, hooks, and providers to speak the same on-the-wire
@@ -47,7 +47,7 @@ The package **does**:
 - Expose React 19 hooks for the federated chrome: `useAuth`, `useApi`,
   `useApps`, `useNotifications`, `usePreferences`, `useAppOrder`,
   `useCurrentApp`, `useRegisterCommands`, plus a `<AbeonProvider>` root.
-- Stay tree-shakable: importing `@abeon/shared/server` never pulls
+- Stay tree-shakable: importing `@abeon/sdk-ts/server` never pulls
   Node-only code into a browser bundle.
 
 The package **does not**:
@@ -101,22 +101,22 @@ Five rules that drive every decision in this codebase:
 
 ```
 ┌────────────────────────────────────────────────────────────────────┐
-│  @abeon/shared/react   (React 19 hooks + providers)                │
+│  @abeon/sdk-ts/react   (React 19 hooks + providers)                │
 │    <AbeonProvider>, <CurrentAppProvider>, <CommandRegistryProvider>│
 │    useAuth, useApi, useApps, useNotifications,                     │
 │    useAppOrder, usePreferences, useRegisterCommands, ...           │
 ├────────────────────────────────────────────────────────────────────┤
-│  @abeon/shared/server  (Node-only — Next middleware, Server Comp.) │
+│  @abeon/sdk-ts/server  (Node-only — Next middleware, Server Comp.) │
 │    getServerAuthContext (jose JWKS)                                │
 │    refreshTokenIfExpired                                            │
 │    createServerApiClient (cookie → Authorization Bearer)            │
 ├────────────────────────────────────────────────────────────────────┤
-│  @abeon/shared/client  (Browser-only — credentials: include)       │
+│  @abeon/sdk-ts/client  (Browser-only — credentials: include)       │
 │    createApiClient (native fetch + CSRF + correlation)             │
 │    createEcho (Laravel Echo + Reverb)                              │
 │    crossAppHref (page-reload navigation between apps)              │
 ├────────────────────────────────────────────────────────────────────┤
-│  @abeon/shared        (Types + errors + constants, env-agnostic)   │
+│  @abeon/sdk-ts        (Types + errors + constants, env-agnostic)   │
 │    Types (User, AppDescriptor, NotificationDto, Preferences, ...)  │
 │    Errors (AbeonError, AuthError, ContractViolationError)          │
 │    HEADERS, ENV, DEFAULTS, PREFERENCES_DEFAULTS                    │
@@ -131,7 +131,7 @@ Five rules that drive every decision in this codebase:
 ```
 
 `package.json` `exports` field gates each door; importing a subpath you
-don't own (e.g. `@abeon/shared/_internal/...`) fails at build time.
+don't own (e.g. `@abeon/sdk-ts/_internal/...`) fails at build time.
 
 Each higher layer may depend on lower layers, **never the reverse**. The
 `/react` door depends on `/client` (via `createApiClient` in
@@ -153,7 +153,7 @@ That's fine — `/react` is at the top of the stack.
 
 ## 4. Module map
 
-### `@abeon/shared` (root)
+### `@abeon/sdk-ts` (root)
 
 The types-only barrel. **Safe everywhere** (no Node, no browser, no React
 imports). Pure value/type re-exports.
@@ -175,7 +175,7 @@ imports). Pure value/type re-exports.
 | `constants.ts` | `HEADERS` (X-Correlation-ID, Authorization, …), `ENV` (env var names), `DEFAULTS` (cookie names, issuer, TTLs) |
 | `mappers.ts` | `wireToCamel<T>()`, `camelToWire<T>()` — recursive, Array/Date-aware |
 
-### `@abeon/shared/client` (browser)
+### `@abeon/sdk-ts/client` (browser)
 
 Anything that depends on `window`, `document`, `fetch`, or Laravel Echo's
 client runtime.
@@ -186,7 +186,7 @@ client runtime.
 | `client/websocket.ts` | `createEcho(options)` | Wraps `laravel-echo` for Reverb; H3 install-Pusher-once; H5 separate ws/wss ports for TLS-sidecar deployments |
 | `client/cross-app-href.ts` | `crossAppHref(appPath, path?)` | Page-reload navigation builder (per arch §3.7) — strips/adds prefixes, passes absolute URLs through unchanged |
 
-### `@abeon/shared/server` (Node SSR)
+### `@abeon/sdk-ts/server` (Node SSR)
 
 Anything that depends on `process.env`, `fetch` for SSR, or the `jose`
 JWT verification library.
@@ -197,7 +197,7 @@ JWT verification library.
 | `server/api-client.ts` | `createServerApiClient(cookies, headers?, options?)` | V1: cookie → Authorization Bearer; V3: forward inbound X-Correlation-ID; H4: respect explicit Authorization override |
 | `server/jwks.ts` | `getJwks(url, opts?)`, `clearJwksCache()` | Module-scope cache of `createRemoteJWKSet` instances; `cooldownDuration: 30_000` default |
 
-### `@abeon/shared/react` (React 19)
+### `@abeon/sdk-ts/react` (React 19)
 
 | Module | Exports | Purpose |
 |---|---|---|
@@ -383,9 +383,9 @@ The canonical composition for a chrome-enabled app (Inertia or Next):
 
 ```tsx
 <ThemeProvider {...ABEON_THEME_DEFAULTS}>        {/* @abeon/ui or next-themes */}
-  <AbeonProvider initialAuth={{ user }}>          {/* @abeon/shared/react */}
-    <CurrentAppProvider currentApp="crm">         {/* @abeon/shared/react */}
-      <CommandRegistryProvider>                   {/* @abeon/shared/react */}
+  <AbeonProvider initialAuth={{ user }}>          {/* @abeon/sdk-ts/react */}
+    <CurrentAppProvider currentApp="crm">         {/* @abeon/sdk-ts/react */}
+      <CommandRegistryProvider>                   {/* @abeon/sdk-ts/react */}
         <App />
       </CommandRegistryProvider>
     </CurrentAppProvider>
@@ -544,7 +544,7 @@ mirror them.
 abeon-sdk-php/schemas/dto/user.json    ←──── canonical
       │
       ▼  npm run sync-schemas
-abeon-shared/schemas/dto/user.json     ←──── vendored (copy)
+abeon-sdk-ts/schemas/dto/user.json     ←──── vendored (copy)
       │
       └──── npm run sync-schemas:check (CI gate)
                 fails build if vendored copy drifts
@@ -555,7 +555,7 @@ abeon-shared/schemas/dto/user.json     ←──── vendored (copy)
       │     schema but the TS vendored copy is stale.
       │
       ▼
-abeon-shared/src/types/user.ts          ←──── hand-written
+abeon-sdk-ts/src/types/user.ts          ←──── hand-written
       (matches schema field-for-field, snake_case preserved)
 ```
 
@@ -591,15 +591,15 @@ The `exports` field has four entries:
 `sideEffects: false` in `package.json` tells bundlers it's safe to drop
 unused exports. The result:
 
-- A Next.js client bundle that only imports `@abeon/shared` (types) gets
+- A Next.js client bundle that only imports `@abeon/sdk-ts` (types) gets
   zero runtime cost — types are erased.
-- A client component that imports `@abeon/shared/client` gets `fetch`
+- A client component that imports `@abeon/sdk-ts/client` gets `fetch`
   wrapper + `laravel-echo`/`pusher-js` (~30 KB). No `jose`. No Node-only
   code.
-- A Server Component that imports `@abeon/shared/server` gets `jose` (~50 KB)
+- A Server Component that imports `@abeon/sdk-ts/server` gets `jose` (~50 KB)
   but no `laravel-echo`. Tree-shake-friendly because `/server` and
   `/client` are separate entries.
-- A consumer of `@abeon/shared/react` pulls React peer-dep code plus
+- A consumer of `@abeon/sdk-ts/react` pulls React peer-dep code plus
   whatever hooks it actually invokes — `useNotifications` brings
   `EchoLike` (interface only, zero runtime cost), `usePreferences` brings
   the optimistic merge function, etc.
@@ -705,7 +705,7 @@ Out of scope, deliberately:
 - **`@abeon/ui` chrome components** — see [`abeon-ui`](https://github.com/abeon/abeon-ui)
   (sibling repo). `docs/chrome-composition.md` in that repo shows how
   this package's providers compose with the UI components.
-- **Backend implementation** — `@abeon/shared` describes the *frontend
+- **Backend implementation** — `@abeon/sdk-ts` describes the *frontend
   half* of every contract. The backend half lives in
   [`abeon-sdk-php`](../../abeon-sdk-php) with its own
   [`ARCHITECTURE.md`](../../abeon-sdk-php/docs/ARCHITECTURE.md).

@@ -32,7 +32,7 @@ export interface CreateServerApiClientOptions {
  * sent as `X-XSRF-TOKEN` (Sanctum default).
  *
  *     import { cookies, headers } from 'next/headers';
- *     import { createServerApiClient } from '@abeon/shared/server';
+ *     import { createServerApiClient } from '@abeon/sdk-ts/server';
  *
  *     const api = createServerApiClient(cookies(), headers());
  *     const me = await api.get<User>('/api/v1/me');
@@ -45,7 +45,7 @@ export function createServerApiClient(
     const baseUrl = options.baseUrl ?? readEnv(ENV.INTERNAL_API_URL);
     if (!baseUrl) {
         throw new Error(
-            `@abeon/shared/server: baseUrl required (set ${ENV.INTERNAL_API_URL} or pass options.baseUrl)`,
+            `@abeon/sdk-ts/server: baseUrl required (set ${ENV.INTERNAL_API_URL} or pass options.baseUrl)`,
         );
     }
 
