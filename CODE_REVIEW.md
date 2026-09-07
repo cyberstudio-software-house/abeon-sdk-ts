@@ -698,4 +698,4 @@ L1-L7 + opcjonalne: ESLint `no-explicit-any` rule, JSDoc examples na regex, type
 
 - Pełne raw outputy 3 review-ów zapisane w `/home/mmucha/.claude/projects/-home-mmucha-projects-abeon-suit/ff2e62d7-5df7-4470-bc56-785595d3e569/tool-results/`.
 - Cross-references do `file:line` w `abeon-sdk-ts/src/`.
-- Wcześniejsze docs: `../abeon-sdk-ts-phase0-plan.md` (v1.1 z V1-V5), `../abeon-sdk-php/CODE_REVIEW.md` (companion PHP-side review).
+- Wcześniejsze docs: `../abeon-shared-phase0-plan.md` (v1.1 z V1-V5), `../abeon-sdk-php/CODE_REVIEW.md` (companion PHP-side review).

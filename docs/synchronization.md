@@ -126,6 +126,6 @@ Per-domain event schemas (e.g. `crm.contact.created.json`) live in **each servic
 
 ## Related
 
-- [Phase 0 plan §H](../../abeon-sdk-ts-phase0-plan.md) — synchronization decision in TS plan.
+- [Phase 0 plan §H](../../abeon-shared-phase0-plan.md) — synchronization decision in TS plan.
 - [ADR-0002 (PHP SDK)](../../abeon-sdk-php/docs/adr/0002-event-envelope.md) — envelope contract.
 - [PHP events catalog](../../abeon-sdk-php/docs/events-catalog.md) — federation convention for per-event payload schemas.

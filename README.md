@@ -23,7 +23,7 @@ Tree-shake-friendly via `package.json` `exports` field and `sideEffects: false`.
 - React layer (provider, hooks, app registry).
 - WebSocket (Laravel Echo + Reverb), notifications, complete docs.
 
-See [`../abeon-sdk-ts-phase0-plan.md`](../abeon-sdk-ts-phase0-plan.md) for the plan history.
+See [`../abeon-shared-phase0-plan.md`](../abeon-shared-phase0-plan.md) for the plan history.
 
 ## Installation
 
@@ -107,7 +107,11 @@ PHP DTOs and TS types are written by hand from the same schemas; contract tests 
 
 ## Naming
 
-- **Folder:** `abeon-sdk-ts` (sibling of `abeon-sdk-php`, no `-ts` suffix — single-language stack).
+- **Folder:** `abeon-sdk-ts` (sibling of `abeon-sdk-php`). Renamed from `abeon-shared` on
+  2026-09-07. The original choice was deliberately suffix-free — the reasoning was that a
+  single-language stack does not need one — and it was wrong for a different reason: the name
+  said the package was shared rather than what it is. Directory, repository and npm package now
+  carry one name. See `CHANGELOG.md`.
 - **npm package:** `@abeon/sdk-ts`.
 
 ## Development

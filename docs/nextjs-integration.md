@@ -215,4 +215,4 @@ This wires Echo's `/broadcasting/auth` POST through `AuthMiddleware` so Reverb a
 
 - [ADR-0001 (PHP SDK)](../../abeon-sdk-php/docs/adr/0001-jwt-format.md) — JWT format, cookie ↔ Authorization translation responsibility.
 - [ADR-0003 (PHP SDK)](../../abeon-sdk-php/docs/adr/0003-correlation-id.md) — Correlation ID propagation.
-- [Phase 0 plan](../../abeon-sdk-ts-phase0-plan.md) — V1 / V3 / V4 / V5 fix references.
+- [Phase 0 plan](../../abeon-shared-phase0-plan.md) — V1 / V3 / V4 / V5 fix references.
