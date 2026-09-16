@@ -7,6 +7,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); this package is 
 
 Nothing yet.
 
+## [0.2.0] — 2026-09-16
+
+### Added
+
+- `AbeonProvider` and `PreferencesProvider` accept `initialPreferences`. A version 1 document seeds the
+  shared preferences state and the mount fetch is skipped, so a saved dark theme or collapsed sidebar
+  no longer renders the defaults for the length of a request first. A tenant switch still re-fetches.
+- `buildPinnedCommands()` and `buildAppCommands()` map pinned items and the `useApps()` catalogue to
+  command-palette commands, with `pin.` and `app.` id prefixes. Until now only navigation was
+  registered, so the palette could not reach an application or a pin.
+
 ## [0.1.0] — 2026-09-07
 
 First tagged version. Everything below was already in use — four services and the
