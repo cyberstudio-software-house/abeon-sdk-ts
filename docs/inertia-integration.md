@@ -42,10 +42,11 @@ The shared `abeon.user` payload mirrors `Abeon\SDK\DTO\User::toArray()` — same
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { AbeonProvider } from '@abeon/sdk-ts/react';
-import type { User } from '@abeon/sdk-ts';
+import type { Preferences, User } from '@abeon/sdk-ts';
 
 interface AbeonProps {
     user: User | null;
+    preferences?: Preferences | null;
 }
 
 createInertiaApp({
@@ -54,13 +55,19 @@ createInertiaApp({
     setup({ el, App, props }) {
         const abeon = (props.initialPage.props.abeon as AbeonProps) ?? { user: null };
         createRoot(el).render(
-            <AbeonProvider initialAuth={{ user: abeon.user }}>
+            <AbeonProvider initialAuth={{ user: abeon.user }} initialPreferences={abeon.preferences}>
                 <App {...props} />
             </AbeonProvider>,
         );
     },
 });
 ```
+
+`initialPreferences` is optional. When the server shares the user's preferences document for the
+first page load, the saved theme and sidebar state apply from the first render and the mount fetch is
+skipped; without it the provider fetches `/api/v1/auth/me/preferences` after mounting, and anything
+styled from preferences changes once that request returns. Share it on full page loads only — the
+provider reads it once, so Inertia visits can send `null`.
 
 ## 3. Components consume `useAuth`
 

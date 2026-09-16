@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import type { ApiClient } from '../_internal/api-client-base.js';
 import { createApiClient } from '../client/api-client.js';
+import type { Preferences } from '../types/preferences.js';
 import type { User } from '../types/user.js';
 import { AbeonContext, type AbeonContextValue } from './context.js';
 import { PreferencesProvider } from './use-preferences.js';
@@ -13,6 +14,12 @@ export interface AbeonProviderProps {
      * the server rendered — no hydration mismatch, no flash.
      */
     initialAuth?: { user: User | null };
+    /**
+     * Preferences resolved on the server for the same request. Seeds the shared
+     * preferences state so the saved theme and layout apply from the first render
+     * instead of after a client fetch. Ignored unless it is a version 1 document.
+     */
+    initialPreferences?: Preferences | null;
     /**
      * Pre-built API client. If omitted, the provider constructs one via
      * `createApiClient()` with default env-driven configuration.
@@ -46,6 +53,7 @@ export interface AbeonProviderProps {
 export function AbeonProvider({
     children,
     initialAuth,
+    initialPreferences,
     apiClient,
 }: AbeonProviderProps): ReactNode {
     // M6: validate initialAuth shape at the entry point. Most callers pass
@@ -81,7 +89,7 @@ export function AbeonProvider({
     // settings page, theme toggle, etc.) without anyone needing to re-fetch.
     return (
         <AbeonContext.Provider value={value}>
-            <PreferencesProvider>{children}</PreferencesProvider>
+            <PreferencesProvider initialPreferences={initialPreferences}>{children}</PreferencesProvider>
         </AbeonContext.Provider>
     );
 }

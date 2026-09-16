@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 import { act, renderHook, waitFor } from '@testing-library/react';
-import type { ReactNode } from 'react';
+import { useContext, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { AbeonProvider, usePreferences } from '../../src/react/index.js';
+import { AbeonContext } from '../../src/react/context.js';
 import type { ApiClient } from '../../src/_internal/api-client-base.js';
-import type { User } from '../../src/index.js';
+import type { Preferences, User } from '../../src/index.js';
 
 const sampleUser: User = {
     id: '1',
@@ -93,5 +94,57 @@ describe('usePreferences (context-backed)', () => {
         expect(themeB).toBe('dark');
         // Same identity — both consumers return the shared context value.
         expect(result.current.a).toBe(result.current.b);
+    });
+});
+
+describe('usePreferences seeded from the server', () => {
+    const saved = {
+        version: 1,
+        chrome: { theme: 'dark', sidebarCollapsed: true, pinned: [], appOrder: [], recents: [] },
+    } as unknown as Preferences;
+
+    function wrapSeeded(api: ApiClient, initialPreferences: unknown) {
+        return ({ children }: { children: ReactNode }) => (
+            <AbeonProvider
+                apiClient={api}
+                initialAuth={{ user: sampleUser }}
+                initialPreferences={initialPreferences as Preferences}
+            >
+                {children}
+            </AbeonProvider>
+        );
+    }
+
+    it('renders the saved preferences on the first render and does not fetch on mount', async () => {
+        const { api, get } = makeApi();
+        const { result } = renderHook(() => usePreferences(), { wrapper: wrapSeeded(api, saved) });
+
+        expect(result.current.preferences.chrome?.theme).toBe('dark');
+        expect(result.current.preferences.chrome?.sidebarCollapsed).toBe(true);
+
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        expect(get).not.toHaveBeenCalled();
+    });
+
+    it('fetches again after a tenant switch', async () => {
+        const { api, get } = makeApi();
+        const { result } = renderHook(
+            () => ({ prefs: usePreferences(), ctx: useContext(AbeonContext) }),
+            { wrapper: wrapSeeded(api, saved) },
+        );
+
+        act(() => result.current.ctx?.onTenantSwitched());
+
+        await waitFor(() => expect(get).toHaveBeenCalledTimes(1));
+    });
+
+    it('ignores a document that is not version 1 and fetches as before', async () => {
+        const { api, get } = makeApi();
+        const { result } = renderHook(() => usePreferences(), {
+            wrapper: wrapSeeded(api, { version: 2, chrome: { theme: 'dark' } }),
+        });
+
+        expect(result.current.preferences.chrome?.theme).not.toBe('dark');
+        await waitFor(() => expect(get).toHaveBeenCalledTimes(1));
     });
 });

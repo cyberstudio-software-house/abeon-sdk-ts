@@ -41,6 +41,12 @@ const PreferencesContext = createContext<UsePreferencesReturn | null>(null);
 export interface PreferencesProviderProps {
     children: ReactNode;
     options?: UsePreferencesOptions;
+    /**
+     * Preferences the server already read for this user and organisation. Used as
+     * the first state so the first paint carries the saved theme and layout, and
+     * the mount fetch is skipped. A tenant switch still re-fetches.
+     */
+    initialPreferences?: Preferences | null;
 }
 
 /**
@@ -52,8 +58,12 @@ export interface PreferencesProviderProps {
  * to wire it themselves. Use it directly only in tests or when isolating
  * a subtree from the shared cache.
  */
-export function PreferencesProvider({ children, options }: PreferencesProviderProps): ReactNode {
-    const value = usePreferencesState(options ?? {}, true);
+export function PreferencesProvider({
+    children,
+    options,
+    initialPreferences,
+}: PreferencesProviderProps): ReactNode {
+    const value = usePreferencesState(options ?? {}, true, initialPreferences);
 
     return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>;
 }
@@ -87,19 +97,28 @@ export function usePreferences(options: UsePreferencesOptions = {}): UsePreferen
  * makes refresh/update no-ops — used when a parent PreferencesProvider is
  * already the source of truth for this subtree.
  */
-function usePreferencesState(options: UsePreferencesOptions, active: boolean): UsePreferencesReturn {
+function usePreferencesState(
+    options: UsePreferencesOptions,
+    active: boolean,
+    initialPreferences: Preferences | null = null,
+): UsePreferencesReturn {
     const api = useApi();
     const { user } = useAuth();
     const tenantEpoch = useContext(AbeonContext)?.tenantEpoch ?? 0;
     const path = options.path ?? '/api/v1/auth/me/preferences';
     const autoLoad = options.autoLoad ?? true;
 
-    const [preferences, setPreferences] = useState<Preferences>(PREFERENCES_DEFAULTS);
+    const seeded = active && user !== null && isPreferences(initialPreferences) ? initialPreferences : null;
+
+    const [preferences, setPreferences] = useState<Preferences>(seeded ?? PREFERENCES_DEFAULTS);
     const [loading, setLoading] = useState<boolean>(false);
     const [saving, setSaving] = useState<boolean>(false);
     const [error, setError] = useState<AbeonError | null>(null);
 
-    const lastFetched = useRef<Preferences | null>(null);
+    const lastFetched = useRef<Preferences | null>(seeded);
+    const seed = useRef<{ userId: string; epoch: number } | null>(
+        seeded !== null && user !== null ? { userId: user.id, epoch: tenantEpoch } : null,
+    );
 
     const refresh = useCallback(async () => {
         if (!active || !user) return;
@@ -141,6 +160,12 @@ function usePreferencesState(options: UsePreferencesOptions, active: boolean): U
     );
 
     useEffect(() => {
+        if (seed.current !== null) {
+            if (seed.current.userId === user?.id && seed.current.epoch === tenantEpoch) {
+                return;
+            }
+            seed.current = null;
+        }
         if (active && autoLoad && user) {
             void refresh();
         }
