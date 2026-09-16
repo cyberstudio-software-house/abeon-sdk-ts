@@ -15,6 +15,12 @@ export {
     type BuildNavCommandsOptions,
 } from './nav-commands.js';
 export {
+    buildPinnedCommands,
+    buildAppCommands,
+    type BuildPinnedCommandsOptions,
+    type BuildAppCommandsOptions,
+} from './app-commands.js';
+export {
     useRegisterSearchProvider,
     searchResultToCommand,
     type UseRegisterSearchProviderOptions,
