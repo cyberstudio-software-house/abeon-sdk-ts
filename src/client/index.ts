@@ -1,6 +1,6 @@
 export { createApiClient, type CreateApiClientOptions } from './api-client.js';
 export { createEcho, type EchoOptions } from './websocket.js';
-export { crossAppHref } from './cross-app-href.js';
+export { crossAppHref, type CrossAppQuery } from './cross-app-href.js';
 export {
     DEFAULT_SECTION_ID,
     addPin,

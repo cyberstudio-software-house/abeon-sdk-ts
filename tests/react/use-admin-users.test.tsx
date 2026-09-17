@@ -3,7 +3,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { AbeonError, type OrganisationMember, type Tenant, type User } from '../../src/index.js';
-import { AbeonProvider, useAdminUsers, useTenant } from '../../src/react/index.js';
+import { AbeonProvider, adminUsersQueryString, useAdminUsers, useTenant } from '../../src/react/index.js';
 import type { ApiClient } from '../../src/_internal/api-client-base.js';
 
 const ACME: Tenant = { id: 1, name: 'Acme Sp. z o.o.', slug: 'acme', logo_url: null, current: true };
@@ -248,4 +248,47 @@ describe('useAdminUsers', () => {
         expect(result.current.members).toEqual([]);
         expect(result.current.error?.status).toBe(403);
     });
+
+    it('asks without a query string by default, so the full list comes back as before', async () => {
+        const { client, get } = fakeApi();
+        const { result } = renderHook(() => useAdminUsers(), { wrapper: wrapper(client) });
+
+        await waitFor(() => expect(result.current.members).toHaveLength(2));
+
+        expect(get.mock.calls.map((c) => c[0])).toContain('/api/v1/auth/admin/users');
+        expect(result.current.pagination).toBeNull();
+    });
+
+    it('sends filter, sort and page, and exposes the pagination the server returned', async () => {
+        const { client, get } = fakeApi();
+        get.mockImplementation(async (path: string) => {
+            if (path.startsWith('/api/v1/auth/admin/users?')) {
+                return {
+                    data: [ACME_MEMBERS[1]],
+                    meta: { current_page: 2, per_page: 1, total: 2, last_page: 2 },
+                };
+            }
+            return { data: [] };
+        });
+
+        const { result } = renderHook(
+            () => useAdminUsers({ query: { filter: { status: 'active' }, sort: '-joined_at', page: 2, perPage: 1 } }),
+            { wrapper: wrapper(client) },
+        );
+
+        await waitFor(() => expect(result.current.pagination?.current_page).toBe(2));
+
+        expect(get.mock.calls.map((c) => c[0])).toContain(
+            '/api/v1/auth/admin/users?filter%5Bstatus%5D=active&sort=-joined_at&page=2&per_page=1',
+        );
+        expect(result.current.members.map((m) => m.id)).toEqual(['3']);
+    });
 });
+
+describe('adminUsersQueryString', () => {
+    it('is empty when nothing is asked', () => {
+        expect(adminUsersQueryString(undefined)).toBe('');
+        expect(adminUsersQueryString({})).toBe('');
+    });
+});
+

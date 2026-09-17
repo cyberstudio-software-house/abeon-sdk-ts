@@ -7,6 +7,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); this package is 
 
 Nothing yet.
 
+## [0.7.0] — 2026-09-17
+
+### Added
+
+- **Formatting** (`formatDate`, `formatCurrency`, `formatRelativeTime`) over `Intl`, Polish by default;
+  each returns `''` for input it cannot read. Architecture §3.4.
+- **Validators** `isValidNip`, `isValidRegon` (9 and 14 digits), `isValidPesel` (checksum and date),
+  `isValidIban` (mod-97, country lengths), `isValidPolishPostalCode`.
+- **`crossAppHref(appPath, path, query)`** — a third argument carries context between applications
+  (§3.7), merged with any query in `path`, fragment kept. `CrossAppQuery` type.
+- **`useAdminUsers({ query })`** with `filter.status`, `sort`, `page`, `perPage` (ADR-0004) and
+  `pagination` in the result; `adminUsersQueryString`. Without a query nothing changes.
+
 ## [0.6.0] — 2026-09-17
 
 ### Added

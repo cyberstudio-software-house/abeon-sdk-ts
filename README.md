@@ -10,7 +10,7 @@ TypeScript frontend has a Laravel API behind it
 
 | Subpath | Contents |
 |---|---|
-| `@abeon/sdk-ts` | Types-only barrel (User, Permission, EventEnvelope, ProblemDetails, …), errors, constants, mappers. Safe in any environment. |
+| `@abeon/sdk-ts` | Types (User, Permission, EventEnvelope, ProblemDetails, …), errors, constants, mappers, formatters (`formatDate`, `formatCurrency`, `formatRelativeTime`) and validators (NIP, REGON, PESEL, IBAN, postal code). Pure, safe in any environment. |
 | `@abeon/sdk-ts/client` | Browser-only: `createApiClient` (native fetch wrapper, CSRF, correlation), `createEcho` (Laravel Echo + Reverb). |
 | `@abeon/sdk-ts/server` | Node-only: `createServerApiClient(cookies, headers)`, `getServerAuthContext`, `refreshTokenIfExpired`, JWKS cache. |
 | `@abeon/sdk-ts/react` | React provider + hooks: `<AbeonProvider>`, `useAuth`, `useApi`, `useApps`, `useTenant`, `useStore`, `usePreferences`, `usePinnedItems`, `useNotifications`, `useNotificationPreferences`, `useAdminUsers`. |

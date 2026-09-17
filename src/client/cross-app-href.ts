@@ -18,11 +18,22 @@
  *   crossAppHref('/crm', 'contacts/42')            → '/crm/contacts/42'
  *   crossAppHref(null, '/contacts/42')             → '/contacts/42'
  *   crossAppHref('/crm', 'https://other.example')  → 'https://other.example'
+ *   crossAppHref('/finance', '/invoices', { contact_id: 123 }) → '/finance/invoices?contact_id=123'
+ *
+ * `query` carries context between applications (§3.7): it merges with a query already
+ * in `path`, skips `null` and `undefined`, and keeps a `#fragment` at the end.
  */
+export type CrossAppQuery = Record<string, string | number | boolean | null | undefined>;
+
 export function crossAppHref(
     appPath: string | null | undefined,
     path?: string,
+    query?: CrossAppQuery,
 ): string {
+    return withQuery(baseHref(appPath, path), query);
+}
+
+function baseHref(appPath: string | null | undefined, path?: string): string {
     if (path && (path.startsWith('http://') || path.startsWith('https://'))) {
         return path;
     }
@@ -52,4 +63,30 @@ function normalisePrefix(input: string | null | undefined): string {
 
 function ensureLeadingSlash(path: string): string {
     return path.startsWith('/') ? path : '/' + path;
+}
+
+function withQuery(href: string, query?: CrossAppQuery): string {
+    if (!query) {
+        return href;
+    }
+
+    const entries = Object.entries(query).filter(
+        (entry): entry is [string, string | number | boolean] => entry[1] !== null && entry[1] !== undefined,
+    );
+    if (entries.length === 0) {
+        return href;
+    }
+
+    const hashIndex = href.indexOf('#');
+    const hash = hashIndex >= 0 ? href.slice(hashIndex) : '';
+    const withoutHash = hashIndex >= 0 ? href.slice(0, hashIndex) : href;
+    const queryIndex = withoutHash.indexOf('?');
+    const pathPart = queryIndex >= 0 ? withoutHash.slice(0, queryIndex) : withoutHash;
+    const params = new URLSearchParams(queryIndex >= 0 ? withoutHash.slice(queryIndex + 1) : '');
+
+    for (const [key, value] of entries) {
+        params.set(key, String(value));
+    }
+
+    return `${pathPart}?${params.toString()}${hash}`;
 }

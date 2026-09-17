@@ -38,6 +38,8 @@ export {
 } from './use-notification-preferences.js';
 export {
     useAdminUsers,
+    adminUsersQueryString,
+    type AdminUsersQuery,
     type UseAdminUsersOptions,
     type UseAdminUsersReturn,
 } from './use-admin-users.js';

@@ -1,8 +1,21 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { AbeonError } from '../errors.js';
 import type { MembershipStatus, OrganisationMember } from '../types/organisation-member.js';
+import type { Pagination } from '../types/pagination.js';
 import { AbeonContext } from './context.js';
 import { useApi } from './use-api.js';
+
+/**
+ * List conventions of ADR-0004. Without `page` or `perPage` the endpoint returns every
+ * member, as it always has.
+ */
+export interface AdminUsersQuery {
+    filter?: { status?: MembershipStatus };
+    /** e.g. `-joined_at`, `email`, `name`. */
+    sort?: string;
+    page?: number;
+    perPage?: number;
+}
 
 export interface UseAdminUsersOptions {
     /**
@@ -12,11 +25,14 @@ export interface UseAdminUsersOptions {
     path?: string;
     /** Auto-fetch on mount. Default `true`. */
     autoLoad?: boolean;
+    query?: AdminUsersQuery;
 }
 
 export interface UseAdminUsersReturn {
     /** Members of the **current** organisation. Never anybody else's. */
     members: OrganisationMember[];
+    /** Present when the list was requested page by page. */
+    pagination: Pagination | null;
     loading: boolean;
     error: AbeonError | null;
     refresh: () => Promise<void>;
@@ -34,6 +50,29 @@ export interface UseAdminUsersReturn {
      * administrator — by `problem.title` rather than by matching on prose.
      */
     setStatus: (userId: string, status: MembershipStatus) => Promise<void>;
+}
+
+export function adminUsersQueryString(query: AdminUsersQuery | undefined): string {
+    if (!query) {
+        return '';
+    }
+
+    const params = new URLSearchParams();
+    if (query.filter?.status) {
+        params.set('filter[status]', query.filter.status);
+    }
+    if (query.sort) {
+        params.set('sort', query.sort);
+    }
+    if (query.page !== undefined) {
+        params.set('page', String(query.page));
+    }
+    if (query.perPage !== undefined) {
+        params.set('per_page', String(query.perPage));
+    }
+
+    const encoded = params.toString();
+    return encoded === '' ? '' : `?${encoded}`;
 }
 
 function toAbeonError(err: unknown): AbeonError {
@@ -66,7 +105,10 @@ export function useAdminUsers(options: UseAdminUsersOptions = {}): UseAdminUsers
     const path = options.path ?? '/api/v1/auth/admin/users';
     const autoLoad = options.autoLoad ?? true;
 
+    const queryString = adminUsersQueryString(options.query);
+
     const [members, setMembers] = useState<OrganisationMember[]>([]);
+    const [pagination, setPagination] = useState<Pagination | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<AbeonError | null>(null);
 
@@ -74,15 +116,19 @@ export function useAdminUsers(options: UseAdminUsersOptions = {}): UseAdminUsers
         setLoading(true);
         setError(null);
         try {
-            const response = await api.get<{ data: OrganisationMember[] }>(path);
+            const response = await api.get<{ data: OrganisationMember[]; meta?: Pagination }>(
+                `${path}${queryString}`,
+            );
             setMembers(Array.isArray(response?.data) ? response.data : []);
+            setPagination(response?.meta?.current_page !== undefined ? response.meta : null);
         } catch (err) {
             setError(toAbeonError(err));
             setMembers([]);
+            setPagination(null);
         } finally {
             setLoading(false);
         }
-    }, [api, path]);
+    }, [api, path, queryString]);
 
     const setStatus = useCallback(
         async (userId: string, status: MembershipStatus) => {
@@ -105,5 +151,5 @@ export function useAdminUsers(options: UseAdminUsersOptions = {}): UseAdminUsers
         // makes every row stale (ADR-0017).
     }, [autoLoad, refresh, tenantEpoch]);
 
-    return { members, loading, error, refresh, setStatus };
+    return { members, pagination, loading, error, refresh, setStatus };
 }
