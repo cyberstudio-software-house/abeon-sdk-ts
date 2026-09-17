@@ -16,7 +16,7 @@ import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
 import type { ValidateFunction } from 'ajv';
 import { describe, expect, it } from 'vitest';
-import type { OrganisationMember, Role } from '../../src/types/index.js';
+import type { OrganisationMember, Preferences, Role } from '../../src/types/index.js';
 
 const SCHEMAS_DIR = join(__dirname, '..', '..', 'schemas');
 const FIXTURES_DIR = join(SCHEMAS_DIR, 'fixtures');
@@ -55,6 +55,7 @@ const cases: Case[] = [
     },
     { name: 'Organisation DTO', schema: 'dto/organisation.json', fixture: 'organisation.json' },
     { name: 'Role DTO', schema: 'dto/role.json', fixture: 'role.json' },
+    { name: 'Preferences DTO', schema: 'dto/preferences.json', fixture: 'preferences.json' },
     { name: 'Event envelope', schema: 'events/_envelope.json', fixture: 'envelope.json' },
     { name: 'REST envelope', schema: 'http/envelope.json', fixture: 'envelope-rest.json' },
     { name: 'Problem details', schema: 'http/problem-details.json', fixture: 'problem-details.json' },
@@ -98,6 +99,34 @@ describe('the exported types match the schemas', () => {
         };
 
         expect(compile('dto/role.json')(role)).toBe(true);
+    });
+
+    it('Preferences and PinnedItem carry every field their schema declares', () => {
+        // Until 2026-09-17 the schema described a pin as {app, path, label} while every
+        // pin written was {id, label, href, iconName, sectionId, order} — this case did
+        // not exist, so nothing compared them.
+        const preferences: Preferences = {
+            version: 1,
+            chrome: {
+                appOrder: ['crm'],
+                pinned: [
+                    {
+                        id: 'crm.contacts',
+                        app: 'crm',
+                        label: 'Kontakty',
+                        href: '/contacts',
+                        iconName: 'Users',
+                        sectionId: 'default',
+                        order: 0,
+                    },
+                ],
+                theme: 'dark',
+                sidebarCollapsed: true,
+                recents: [],
+            },
+        };
+
+        expect(compile('dto/preferences.json')(preferences)).toBe(true);
     });
 
     it('OrganisationMember carries every field its schema declares', () => {

@@ -33,8 +33,19 @@ export interface ChromePreferences {
  * computed per-page (not persisted).
  */
 export interface PinnedItem {
+    /** Unique across applications: `{app}.{item}`, see `pinId()`. */
     id: string;
+    /**
+     * AppDescriptor name of the application the item belongs to. Pins are stored once
+     * per user per organisation and rendered by every application, so without this a
+     * pin to `/settings` would open whichever application is showing the sidebar.
+     */
+    app: string;
     label: string;
+    /**
+     * The path as the owning application links to it. Another application opens it
+     * through `crossAppHref(descriptor.path, href)`; see `resolvePins()`.
+     */
     href: string;
     iconName: string;
     sectionId: string;
