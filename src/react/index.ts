@@ -32,6 +32,11 @@ export {
     type EchoLike,
 } from './use-notifications.js';
 export {
+    useNotificationPreferences,
+    type UseNotificationPreferencesOptions,
+    type UseNotificationPreferencesReturn,
+} from './use-notification-preferences.js';
+export {
     useAdminUsers,
     type UseAdminUsersOptions,
     type UseAdminUsersReturn,

@@ -10,7 +10,13 @@ export type { AppDescriptor } from './app-descriptor.js';
 export type { ProblemDetails } from './problem-details.js';
 export type { EventEnvelope, EventMetadata } from './envelope.js';
 export { ROUTING_KEY_REGEX } from './envelope.js';
-export type { NotificationDto } from './notification.js';
+export type {
+    NotificationDto,
+    NotificationChannel,
+    NotificationPreference,
+    NotificationPreferenceChannels,
+    NotificationPreferences,
+} from './notification.js';
 export type { SearchResult } from './search-result.js';
 export type { UserJwtPayload, ServiceJwtPayload, AbeonJwtPayload } from './jwt.js';
 export type {

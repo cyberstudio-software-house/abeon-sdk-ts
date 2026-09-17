@@ -16,7 +16,12 @@ import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
 import type { ValidateFunction } from 'ajv';
 import { describe, expect, it } from 'vitest';
-import type { OrganisationMember, Preferences, Role } from '../../src/types/index.js';
+import type {
+    NotificationPreferences,
+    OrganisationMember,
+    Preferences,
+    Role,
+} from '../../src/types/index.js';
 
 const SCHEMAS_DIR = join(__dirname, '..', '..', 'schemas');
 const FIXTURES_DIR = join(SCHEMAS_DIR, 'fixtures');
@@ -57,6 +62,16 @@ const cases: Case[] = [
     { name: 'Role DTO', schema: 'dto/role.json', fixture: 'role.json' },
     { name: 'Preferences DTO', schema: 'dto/preferences.json', fixture: 'preferences.json' },
     { name: 'Event envelope', schema: 'events/_envelope.json', fixture: 'envelope.json' },
+    {
+        name: 'Notification request',
+        schema: 'events/notification-requested.json',
+        fixture: 'notification-requested.json',
+    },
+    {
+        name: 'Notification preferences',
+        schema: 'dto/notification-preferences.json',
+        fixture: 'notification-preferences.json',
+    },
     { name: 'REST envelope', schema: 'http/envelope.json', fixture: 'envelope-rest.json' },
     { name: 'Problem details', schema: 'http/problem-details.json', fixture: 'problem-details.json' },
     { name: 'User JWT payload', schema: 'auth/jwt-user.json', fixture: 'jwt-user-decoded.json' },
@@ -134,6 +149,25 @@ describe('the exported types match the schemas', () => {
         const withOrder = { version: 1, chrome: { appOrder: ['crm'] } };
 
         expect(compile('dto/preferences.json')(withOrder)).toBe(false);
+    });
+
+    it('NotificationPreferences carries every field its schema declares', () => {
+        const preferences: NotificationPreferences = {
+            preferences: [{ type: 'crm.deal.assigned', channels: { email: true } }],
+        };
+
+        expect(compile('dto/notification-preferences.json')(preferences)).toBe(true);
+    });
+
+    it('in_app cannot be switched off and a request must keep it', () => {
+        expect(
+            compile('dto/notification-preferences.json')({
+                preferences: [{ type: '*', channels: { in_app: false } }],
+            }),
+        ).toBe(false);
+
+        const request = loadJson<Record<string, unknown>>(join(FIXTURES_DIR, 'notification-requested.json'));
+        expect(compile('events/notification-requested.json')({ ...request, channels: ['email'] })).toBe(false);
     });
 
     it('OrganisationMember carries every field its schema declares', () => {

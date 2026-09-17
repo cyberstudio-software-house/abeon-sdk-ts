@@ -1,7 +1,10 @@
 # @abeon/sdk-ts
 
-TypeScript counterpart to [`abeon/sdk`](../abeon-sdk-php) — shared types,
-helpers, and React hooks for Abeon Unified frontends (Next.js, Laravel + Inertia).
+The **frontend half** of the Abeon contract — types, helpers and React hooks for Abeon Unified
+frontends (Next.js, Laravel + Inertia). Backend capabilities — service tokens, the service client,
+events, the outbox, health — live only in [`abeon/sdk`](../abeon-sdk-php); an application with a
+TypeScript frontend has a Laravel API behind it
+([ADR-0029](../abeon-sdk-php/docs/adr/0029-sdk-ts-is-the-frontend-half.md)).
 
 ## Scope
 
@@ -10,13 +13,13 @@ helpers, and React hooks for Abeon Unified frontends (Next.js, Laravel + Inertia
 | `@abeon/sdk-ts` | Types-only barrel (User, Permission, EventEnvelope, ProblemDetails, …), errors, constants, mappers. Safe in any environment. |
 | `@abeon/sdk-ts/client` | Browser-only: `createApiClient` (native fetch wrapper, CSRF, correlation), `createEcho` (Laravel Echo + Reverb). |
 | `@abeon/sdk-ts/server` | Node-only: `createServerApiClient(cookies, headers)`, `getServerAuthContext`, `refreshTokenIfExpired`, JWKS cache. |
-| `@abeon/sdk-ts/react` | React provider + hooks: `<AbeonProvider>`, `useAuth`, `useApi`, `useApps` (V4), `useNotifications`. |
+| `@abeon/sdk-ts/react` | React provider + hooks: `<AbeonProvider>`, `useAuth`, `useApi`, `useApps`, `useTenant`, `useStore`, `usePreferences`, `usePinnedItems`, `useNotifications`, `useNotificationPreferences`, `useAdminUsers`. |
 
 Tree-shake-friendly via `package.json` `exports` field and `sideEffects: false`. Importing `@abeon/sdk-ts/server` never pulls Node-only code into a browser bundle.
 
 ## Status
 
-**Released and in use.** `v0.1.0` is the current tag. `abeon-boilerplate-inertia` consumes it, and
+**Released and in use.** See [`CHANGELOG.md`](CHANGELOG.md) for the current tag. `abeon-boilerplate-inertia` consumes it, and
 every application forked from that template inherits the dependency.
 
 The Phase 0 scope is complete: types, errors, constants and mappers with contract tests against the

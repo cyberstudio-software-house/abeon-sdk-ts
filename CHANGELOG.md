@@ -7,6 +7,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); this package is 
 
 Nothing yet.
 
+## [0.6.0] — 2026-09-17
+
+### Added
+
+- **`useNotificationPreferences()`** — the signed-in user's delivery rules from AbeonUnified
+  (`/api/v1/notifications/preferences`): `preferences`, `refresh`, and `save`, which replaces the whole set.
+  ADR-0028.
+- Types `NotificationChannel`, `NotificationPreference`, `NotificationPreferenceChannels`,
+  `NotificationPreferences`.
+- Schemas synced from `abeon/sdk` 0.4.0: `channels` in `events/notification-requested.json`,
+  `dto/notification-preferences.json`, and their fixtures, validated by the contract suite.
+
+### Changed
+
+- The README describes the package as the frontend half of the contract, as `docs/ARCHITECTURE.md` always
+  did. ADR-0029.
+
 ## [0.5.0] — 2026-09-17
 
 ### Added

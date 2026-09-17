@@ -30,6 +30,10 @@ contract. Every Abeon service that has a React frontend (11 Inertia apps +
 its types, helpers, hooks, and providers to speak the same on-the-wire
 contract as the PHP backends.
 
+The scope is decided in
+[ADR-0029](../../abeon-sdk-php/docs/adr/0029-sdk-ts-is-the-frontend-half.md): service tokens,
+the service client, events, the outbox and health belong to `abeon/sdk` only.
+
 The package **does**:
 
 - Export canonical TypeScript types that mirror the JSON Schemas owned by
