@@ -17,9 +17,9 @@ export interface BuildAppCommandsOptions {
  * in pin order. Ids are prefixed with `pin.` because the registry deduplicates by
  * id and a pin may point at the same destination as a nav entry.
  */
-export function buildPinnedCommands(
-    pinned: readonly PinnedItem[],
-    navigate: (href: string) => void,
+export function buildPinnedCommands<T extends PinnedItem>(
+    pinned: readonly T[],
+    navigate: (href: string, pin: T) => void,
     options: BuildPinnedCommandsOptions = {},
 ): Command[] {
     const group = options.group ?? 'Przypięte';
@@ -34,7 +34,7 @@ export function buildPinnedCommands(
             keywords: [item.href],
             run: (ctx) => {
                 ctx.close();
-                navigate(item.href);
+                navigate(item.href, item);
             },
         }));
 }

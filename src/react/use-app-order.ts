@@ -26,16 +26,18 @@ export function useAppOrder(options: UsePreferencesOptions = {}): UseAppOrderRet
     const order = chrome.appOrder ?? [];
     const pinned = chrome.pinned ?? [];
 
+    // Only the changed key goes out. The server and `update()` both merge `chrome` key by
+    // key, and resending the whole object carried this render's copy of every other key —
+    // so a pin saved while the sidebar was being collapsed put the old `sidebarCollapsed`
+    // back.
     const setOrder = useCallback(
-        (next: string[]) =>
-            update({ chrome: { ...(preferences.chrome ?? {}), appOrder: next } }),
-        [preferences.chrome, update],
+        (next: string[]) => update({ chrome: { appOrder: next } }),
+        [update],
     );
 
     const setPinned = useCallback(
-        (next: PinnedItem[]) =>
-            update({ chrome: { ...(preferences.chrome ?? {}), pinned: next } }),
-        [preferences.chrome, update],
+        (next: PinnedItem[]) => update({ chrome: { pinned: next } }),
+        [update],
     );
 
     return {

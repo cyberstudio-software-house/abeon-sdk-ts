@@ -110,7 +110,16 @@ function usePreferencesState(
 
     const seeded = active && user !== null && isPreferences(initialPreferences) ? initialPreferences : null;
 
-    const [preferences, setPreferences] = useState<Preferences>(seeded ?? PREFERENCES_DEFAULTS);
+    const [preferences, setPreferencesState] = useState<Preferences>(seeded ?? PREFERENCES_DEFAULTS);
+
+    // The latest state, not this render's. `update()` merges into it, so a callback held
+    // from an earlier render — a pin handler captured before the sidebar was collapsed —
+    // cannot put back the values that render saw.
+    const current = useRef<Preferences>(seeded ?? PREFERENCES_DEFAULTS);
+    const setPreferences = useCallback((next: Preferences) => {
+        current.current = next;
+        setPreferencesState(next);
+    }, []);
     const [loading, setLoading] = useState<boolean>(false);
     const [saving, setSaving] = useState<boolean>(false);
     const [error, setError] = useState<AbeonError | null>(null);
@@ -134,12 +143,12 @@ function usePreferencesState(
         } finally {
             setLoading(false);
         }
-    }, [active, api, path, user]);
+    }, [active, api, path, setPreferences, user]);
 
     const update = useCallback(
         async (patch: Partial<Preferences>) => {
             if (!active || !user) return;
-            const before = preferences;
+            const before = current.current;
             const optimistic = mergeTopLevel(before, patch);
             setPreferences(optimistic);
             setSaving(true);
@@ -156,7 +165,7 @@ function usePreferencesState(
                 setSaving(false);
             }
         },
-        [active, api, path, preferences, user],
+        [active, api, path, setPreferences, user],
     );
 
     useEffect(() => {

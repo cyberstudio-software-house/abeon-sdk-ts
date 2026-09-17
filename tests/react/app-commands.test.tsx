@@ -20,8 +20,8 @@ function app(overrides: Partial<AppDescriptor>): AppDescriptor {
 }
 
 const pins: PinnedItem[] = [
-    { id: 'reports', label: 'Reports', href: '/reports', iconName: 'ChartBar', sectionId: 'default', order: 1 },
-    { id: 'home', label: 'Home', href: '/', iconName: 'Check', sectionId: 'default', order: 0 },
+    { id: 'reports', app: 'boilerplate', label: 'Reports', href: '/reports', iconName: 'ChartBar', sectionId: 'default', order: 1 },
+    { id: 'home', app: 'boilerplate', label: 'Home', href: '/', iconName: 'Check', sectionId: 'default', order: 0 },
 ];
 
 describe('buildPinnedCommands', () => {
@@ -41,7 +41,7 @@ describe('buildPinnedCommands', () => {
         buildPinnedCommands(pins, navigate)[1]?.run?.({ close });
 
         expect(close).toHaveBeenCalledOnce();
-        expect(navigate).toHaveBeenCalledWith('/reports');
+        expect(navigate).toHaveBeenCalledWith('/reports', expect.objectContaining({ id: 'reports' }));
     });
 
     it('honors a custom group label', () => {
