@@ -100,7 +100,7 @@ describe('usePreferences (context-backed)', () => {
 describe('usePreferences seeded from the server', () => {
     const saved = {
         version: 1,
-        chrome: { theme: 'dark', sidebarCollapsed: true, pinned: [], appOrder: [], recents: [] },
+        chrome: { theme: 'dark', sidebarCollapsed: true, pinned: [], recents: [] },
     } as unknown as Preferences;
 
     function wrapSeeded(api: ApiClient, initialPreferences: unknown) {

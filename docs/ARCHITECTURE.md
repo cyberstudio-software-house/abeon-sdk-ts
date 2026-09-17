@@ -45,7 +45,7 @@ The package **does**:
 - Provide a Laravel Echo / Reverb factory tuned for the Abeon WS topology
   (per-app path-prefix, TLS sidecar port resolution).
 - Expose React 19 hooks for the federated chrome: `useAuth`, `useApi`,
-  `useApps`, `useNotifications`, `usePreferences`, `useAppOrder`,
+  `useApps`, `useNotifications`, `usePreferences`, `usePinnedItems`,
   `useCurrentApp`, `useRegisterCommands`, plus a `<AbeonProvider>` root.
 - Stay tree-shakable: importing `@abeon/sdk-ts/server` never pulls
   Node-only code into a browser bundle.
@@ -104,7 +104,7 @@ Five rules that drive every decision in this codebase:
 │  @abeon/sdk-ts/react   (React 19 hooks + providers)                │
 │    <AbeonProvider>, <CurrentAppProvider>, <CommandRegistryProvider>│
 │    useAuth, useApi, useApps, useNotifications,                     │
-│    useAppOrder, usePreferences, useRegisterCommands, ...           │
+│    usePinnedItems, usePreferences, useRegisterCommands, ...        │
 ├────────────────────────────────────────────────────────────────────┤
 │  @abeon/sdk-ts/server  (Node-only — Next middleware, Server Comp.) │
 │    getServerAuthContext (jose JWKS)                                │
@@ -209,7 +209,7 @@ JWT verification library.
 | `react/use-notifications.ts` | `useNotifications(options?)` | REST initial fetch + Echo live updates + optimistic markAsRead/markAllAsRead |
 | `react/current-app.ts` | `<CurrentAppProvider>`, `useCurrentApp()`, `deriveCurrentApp(pathname, apps)` | Active-app identification for chrome highlighting |
 | `react/use-preferences.ts` | `usePreferences(options?)` | GET/PATCH `/api/v1/auth/me/preferences`, optimistic deep-merge |
-| `react/use-app-order.ts` | `useAppOrder(options?)` | Thin wrapper over `usePreferences` for `chrome.appOrder` + `chrome.pinned` |
+| `react/use-pinned-items.ts` | `usePinnedItems(options?)` | Thin wrapper over `usePreferences` for `chrome.pinned`; resolve per application with `resolvePins()` from `@abeon/sdk-ts/client` |
 | `react/command-registry.ts` | `<CommandRegistryProvider>`, `useRegisterCommands(commands)`, `useCommandRegistry()`, types `Command`, `CommandRunContext`, `CommandRegistryValue` | Cmd+K palette source (per ADR-0007); mount-order-safe via initial-sync subscribe |
 | `react/theme.ts` | `THEME_STORAGE_KEY`, `ABEON_THEME_DEFAULTS`, type `ThemePreference` | Re-exports; actual `ThemeProvider` lives in `@abeon/ui` (avoids `next-themes` peer-dep here) |
 
@@ -462,8 +462,10 @@ failure the previous state is restored and an `AbeonError` surfaces in
 `PreferencesController::mergeTopLevel()` so client and server see the
 same shape after either side resolves.
 
-`useAppOrder` is a thin convenience wrapper providing `setOrder` and
-`setPinned` setters over `usePreferences.update({chrome: {...}})`.
+`usePinnedItems` is a thin convenience wrapper providing a `setPinned`
+setter over `usePreferences.update({chrome: {pinned}})` — only that key is
+sent. (It was `useAppOrder` with a `setOrder` too until 0.4.0; the app order
+was removed because nothing set it and nothing read it.)
 
 ### 9.5 Command registry
 

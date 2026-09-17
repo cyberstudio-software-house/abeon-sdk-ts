@@ -84,7 +84,7 @@ export function AbeonProvider({
     );
 
     // Mount PreferencesProvider here so every `usePreferences()` (and
-    // `useAppOrder()`) call inside the tree returns the SAME state instance.
+    // `usePinnedItems()`) call inside the tree returns the SAME state instance.
     // A single PATCH then propagates instantly to every consumer (sidebar,
     // settings page, theme toggle, etc.) without anyone needing to re-fetch.
     return (

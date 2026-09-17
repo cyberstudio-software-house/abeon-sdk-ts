@@ -13,11 +13,6 @@ export interface Preferences {
 }
 
 export interface ChromePreferences {
-    /**
-     * Ordered list of app names. Empty array = chrome falls back to
-     * AppDescriptor declaration order.
-     */
-    appOrder?: string[];
     /** Pinned sidebar items, persisted across devices. */
     pinned?: PinnedItem[];
     theme?: ThemePreference;
@@ -69,7 +64,6 @@ export type ThemePreference = 'light' | 'dark' | 'system';
 export const PREFERENCES_DEFAULTS: Preferences = {
     version: 1,
     chrome: {
-        appOrder: [],
         pinned: [],
         theme: 'system',
         sidebarCollapsed: false,

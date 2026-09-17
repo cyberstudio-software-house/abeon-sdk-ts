@@ -108,7 +108,6 @@ describe('the exported types match the schemas', () => {
         const preferences: Preferences = {
             version: 1,
             chrome: {
-                appOrder: ['crm'],
                 pinned: [
                     {
                         id: 'crm.contacts',
@@ -127,6 +126,13 @@ describe('the exported types match the schemas', () => {
         };
 
         expect(compile('dto/preferences.json')(preferences)).toBe(true);
+    });
+
+    it('the app order is no longer part of the preferences contract', () => {
+        // Removed 2026-09-17 (ADR-0009 amendment): nothing set it and nothing read it.
+        const withOrder = { version: 1, chrome: { appOrder: ['crm'] } };
+
+        expect(compile('dto/preferences.json')(withOrder)).toBe(false);
     });
 
     it('OrganisationMember carries every field its schema declares', () => {

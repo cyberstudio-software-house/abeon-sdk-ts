@@ -63,9 +63,9 @@ export {
     type PreferencesProviderProps,
 } from './use-preferences.js';
 export {
-    useAppOrder,
-    type UseAppOrderReturn,
-} from './use-app-order.js';
+    usePinnedItems,
+    type UsePinnedItemsReturn,
+} from './use-pinned-items.js';
 export {
     CommandRegistryProvider,
     useRegisterCommands,

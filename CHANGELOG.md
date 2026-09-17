@@ -7,6 +7,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); this package is 
 
 Nothing yet.
 
+## [0.4.0] — 2026-09-17
+
+### Removed — breaking
+
+- **`ChromePreferences.appOrder`**, and with it `useAppOrder().order` and `setOrder`. The field came from
+  the MVP's app-order screen, whose "save" only showed a toast; here nothing set it and nothing read it,
+  and the app switcher is ordered by the catalogue. ADR-0009 amended.
+
+### Changed — breaking
+
+- **`useAppOrder` is `usePinnedItems`** (`UseAppOrderReturn` → `UsePinnedItemsReturn`), returning
+  `{ pinned, busy, setPinned }`. With the order gone the old name described nothing it did.
+
 ## [0.3.0] — 2026-09-17
 
 ### Changed — breaking for type consumers

@@ -2,7 +2,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { AbeonProvider, useAppOrder, usePreferences } from '../../src/react/index.js';
+import { AbeonProvider, usePinnedItems, usePreferences } from '../../src/react/index.js';
 import type { ApiClient } from '../../src/_internal/api-client-base.js';
 import type { PinnedItem, Preferences, User } from '../../src/index.js';
 
@@ -47,10 +47,10 @@ function setup() {
     return { patch, wrapper };
 }
 
-describe('useAppOrder', () => {
+describe('usePinnedItems', () => {
     it('sends only the pinned list, not the whole chrome namespace', async () => {
         const { patch, wrapper } = setup();
-        const { result } = renderHook(() => useAppOrder(), { wrapper });
+        const { result } = renderHook(() => usePinnedItems(), { wrapper });
 
         await act(async () => {
             await result.current.setPinned([pinned]);
@@ -62,7 +62,7 @@ describe('useAppOrder', () => {
 
     it('does not undo a change made through another key in the meantime', async () => {
         const { wrapper } = setup();
-        const { result } = renderHook(() => ({ order: useAppOrder(), prefs: usePreferences() }), { wrapper });
+        const { result } = renderHook(() => ({ order: usePinnedItems(), prefs: usePreferences() }), { wrapper });
 
         const staleSetPinned = result.current.order.setPinned;
 
@@ -79,7 +79,7 @@ describe('useAppOrder', () => {
 
     it('keeps the newer value on screen while a stale save is still in flight', async () => {
         const { patch, wrapper } = setup();
-        const { result } = renderHook(() => ({ order: useAppOrder(), prefs: usePreferences() }), { wrapper });
+        const { result } = renderHook(() => ({ order: usePinnedItems(), prefs: usePreferences() }), { wrapper });
 
         const staleSetPinned = result.current.order.setPinned;
 
@@ -108,16 +108,5 @@ describe('useAppOrder', () => {
             release();
             await pending;
         });
-    });
-
-    it('sends only the app order', async () => {
-        const { patch, wrapper } = setup();
-        const { result } = renderHook(() => useAppOrder(), { wrapper });
-
-        await act(async () => {
-            await result.current.setOrder(['crm', 'boilerplate']);
-        });
-
-        expect(patch).toHaveBeenCalledWith('/api/v1/auth/me/preferences', { chrome: { appOrder: ['crm', 'boilerplate'] } });
     });
 });
