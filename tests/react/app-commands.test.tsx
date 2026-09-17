@@ -49,6 +49,17 @@ describe('buildPinnedCommands', () => {
     });
 });
 
+describe('buildPinnedCommands subtitle', () => {
+    it('shows the caption a pin carries, such as its application', () => {
+        const [command] = buildPinnedCommands([{ ...pins[0]!, caption: 'CRM' }], vi.fn());
+        expect(command?.subtitle).toBe('CRM');
+    });
+
+    it('has no subtitle without a caption', () => {
+        expect(buildPinnedCommands([pins[0]!], vi.fn())[0]?.subtitle).toBeNull();
+    });
+});
+
 describe('buildAppCommands', () => {
     it('maps apps to prefixed commands with label, icon and keywords', () => {
         const [crm] = buildAppCommands([app({})], vi.fn());

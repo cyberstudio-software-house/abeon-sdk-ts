@@ -48,6 +48,33 @@ function setup() {
 }
 
 describe('usePinnedItems', () => {
+    it('saves pins and sections in one request', async () => {
+        const { patch, wrapper } = setup();
+        const { result } = renderHook(() => usePinnedItems(), { wrapper });
+        const sections = [{ id: 'sales', label: 'Sprzedaż', order: 1 }];
+
+        await act(async () => {
+            await result.current.savePins({ pinned: [pinned], sections });
+        });
+
+        expect(patch).toHaveBeenCalledTimes(1);
+        expect(patch).toHaveBeenCalledWith('/api/v1/auth/me/preferences', {
+            chrome: { pinned: [pinned], pinnedSections: sections },
+        });
+        expect(result.current.sections).toEqual(sections);
+    });
+
+    it('sends only the keys it was given', async () => {
+        const { patch, wrapper } = setup();
+        const { result } = renderHook(() => usePinnedItems(), { wrapper });
+
+        await act(async () => {
+            await result.current.savePins({ sections: [] });
+        });
+
+        expect(patch).toHaveBeenCalledWith('/api/v1/auth/me/preferences', { chrome: { pinnedSections: [] } });
+    });
+
     it('sends only the pinned list, not the whole chrome namespace', async () => {
         const { patch, wrapper } = setup();
         const { result } = renderHook(() => usePinnedItems(), { wrapper });

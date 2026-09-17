@@ -15,6 +15,11 @@ export interface Preferences {
 export interface ChromePreferences {
     /** Pinned sidebar items, persisted across devices. */
     pinned?: PinnedItem[];
+    /**
+     * Named sections of the pinned list. `default` exists without an entry; an entry
+     * with that id only renames it. See `resolveSections()`.
+     */
+    pinnedSections?: PinnedSection[];
     theme?: ThemePreference;
     sidebarCollapsed?: boolean;
     recents?: RecentEntry[];
@@ -43,9 +48,18 @@ export interface PinnedItem {
      */
     href: string;
     iconName: string;
+    /** The section the pin is shown in; `default` unless the user chose another. */
     sectionId: string;
+    /** Position within its section. */
     order: number;
     isActive?: boolean;
+}
+
+/** A named section of the pinned list. */
+export interface PinnedSection {
+    id: string;
+    label: string;
+    order: number;
 }
 
 export interface RecentEntry {
@@ -65,6 +79,7 @@ export const PREFERENCES_DEFAULTS: Preferences = {
     version: 1,
     chrome: {
         pinned: [],
+        pinnedSections: [],
         theme: 'system',
         sidebarCollapsed: false,
         recents: [],

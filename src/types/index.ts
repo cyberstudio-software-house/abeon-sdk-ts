@@ -17,6 +17,7 @@ export type {
     Preferences,
     ChromePreferences,
     PinnedItem,
+    PinnedSection,
     RecentEntry,
     ThemePreference,
 } from './preferences.js';

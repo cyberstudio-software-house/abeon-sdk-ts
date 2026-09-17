@@ -7,6 +7,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); this package is 
 
 Nothing yet.
 
+## [0.5.0] — 2026-09-17
+
+### Added
+
+- **Pinned sections.** `ChromePreferences.pinnedSections` and `PinnedSection`; `usePinnedItems()` returns
+  `sections` and `savePins({ pinned?, sections? })`, which writes both keys in one request so removing a
+  section and moving its pins cannot half-happen.
+- **The pin logic every application needs, in `@abeon/sdk-ts/client`**, moved out of the boilerplate:
+  `addPin`, `removePin`, `isPinnedIn`, `arrangePins` (a drag within and between sections, keeping pins of
+  applications this one does not show), `toSidebarPins` (with an optional caption such as the owning
+  application's name), and `resolveSections`, `addSection`, `renameSection`, `removeSection` with
+  `DEFAULT_SECTION_ID`. `order` is now a position within a section.
+- `buildPinnedCommands()` puts a pin's `caption` in the command's `subtitle`.
+
 ## [0.4.0] — 2026-09-17
 
 ### Removed — breaking

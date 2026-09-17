@@ -17,7 +17,7 @@ export interface BuildAppCommandsOptions {
  * in pin order. Ids are prefixed with `pin.` because the registry deduplicates by
  * id and a pin may point at the same destination as a nav entry.
  */
-export function buildPinnedCommands<T extends PinnedItem>(
+export function buildPinnedCommands<T extends PinnedItem & { caption?: string | null }>(
     pinned: readonly T[],
     navigate: (href: string, pin: T) => void,
     options: BuildPinnedCommandsOptions = {},
@@ -29,6 +29,7 @@ export function buildPinnedCommands<T extends PinnedItem>(
         .map((item) => ({
             id: `pin.${item.id}`,
             title: item.label,
+            subtitle: item.caption ?? null,
             group,
             icon: item.iconName || null,
             keywords: [item.href],
