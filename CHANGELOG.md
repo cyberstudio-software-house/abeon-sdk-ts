@@ -7,6 +7,33 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); this package is 
 
 Nothing yet.
 
+## [0.3.0] — 2026-09-17
+
+### Changed — breaking for type consumers
+
+- **`PinnedItem.app` is required.** Pins are stored once per user per organisation and shown by every
+  application of it; without the owning application a pin to `/settings` opened whichever application
+  rendered the sidebar, and two applications with a `settings` item shared one pin. Ids are now
+  `{app}.{item}` (`pinId()`). The schema said `{app, path, label}` while every pin written was
+  `{id, label, href, iconName, sectionId, order}`; both now describe the stored shape and a contract
+  test compares them.
+
+### Added
+
+- `resolvePins(pinned, currentApp, apps)` and `pinId()` in `@abeon/sdk-ts/client`: pins of the current
+  application are visited in place, pins of another application open with a full load under its
+  path (`crossAppHref`), pins of applications the organisation does not have — or that predate the
+  `app` field — are hidden without being deleted.
+- `buildPinnedCommands()` passes the pin to `navigate` as a second argument.
+
+### Fixed
+
+- `useAppOrder().setPinned` and `setOrder` sent the whole `chrome` object from the render they were
+  created in, so a pin saved while the sidebar was being collapsed restored the old
+  `sidebarCollapsed`. They send only their own key now.
+- `usePreferences().update()` merged into the state of the render it came from rather than the latest
+  one, so a held callback briefly showed stale values even when it sent a single key.
+
 ## [0.2.0] — 2026-09-16
 
 ### Added
