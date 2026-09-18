@@ -264,7 +264,7 @@ describe('useAdminUsers', () => {
         get.mockImplementation(async (path: string) => {
             if (path.startsWith('/api/v1/auth/admin/users?')) {
                 return {
-                    data: [ACME_MEMBERS[1]],
+                    data: [ACME_MEMBERS[1]!],
                     meta: { current_page: 2, per_page: 1, total: 2, last_page: 2 },
                 };
             }

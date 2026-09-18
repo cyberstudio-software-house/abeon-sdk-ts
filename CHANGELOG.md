@@ -7,6 +7,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); this package is 
 
 Nothing yet.
 
+## [0.7.1] — 2026-09-18
+
+### Fixed
+
+- `tsc -p tsconfig.tests.json` failed on the new `useAdminUsers` paging test — the test only, no
+  shipped code.
+
 ## [0.7.0] — 2026-09-17
 
 ### Added
