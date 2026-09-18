@@ -110,9 +110,10 @@ export function createEcho(options: EchoOptions = {}): Echo<'reverb'> {
         forceTLS,
         enabledTransports: ['ws', 'wss'],
         authEndpoint,
-        auth: options.authHeaders
-            ? { headers: options.authHeaders }
-            : undefined,
+        // Omitted rather than set to `undefined`: pusher-js reads `auth.params` without
+        // checking, so passing the key with no value fails the first subscription with
+        // "Cannot use 'in' operator to search for 'params' in undefined".
+        ...(options.authHeaders ? { auth: { headers: options.authHeaders } } : {}),
         ...(options.cluster ? { cluster: options.cluster } : {}),
     });
 }

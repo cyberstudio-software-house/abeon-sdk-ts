@@ -88,6 +88,21 @@ describe('createEcho — authEndpoint + forceTLS', () => {
         expect(echoCalls[0]?.authEndpoint).toBe('/cms/broadcasting/auth');
     });
 
+    it('passes no auth key at all when there are no headers', () => {
+        // pusher-js reads `auth.params` without checking, so `auth: undefined` fails the
+        // first subscription with "Cannot use 'in' operator to search for 'params' in
+        // undefined" — which looks like a server problem and is not one.
+        createEcho({ key: 'k', wsUrl: 'ws://127.0.0.1:8085' });
+
+        expect('auth' in (echoCalls[0] ?? {})).toBe(false);
+    });
+
+    it('passes auth headers when they are given', () => {
+        createEcho({ key: 'k', wsUrl: 'ws://127.0.0.1:8085', authHeaders: { 'X-Test': '1' } });
+
+        expect(echoCalls[0]?.auth).toEqual({ headers: { 'X-Test': '1' } });
+    });
+
     it('honours empty-string authEndpoint as "disabled"', () => {
         createEcho({
             key: 'k',

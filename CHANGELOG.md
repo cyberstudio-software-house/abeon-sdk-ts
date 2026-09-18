@@ -7,6 +7,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); this package is 
 
 Nothing yet.
 
+## [0.8.1] — 2026-09-18
+
+### Fixed
+
+- **`createEcho` no longer passes `auth: undefined`.** pusher-js reads `auth.params` without checking, so
+  the first channel subscription failed with "Cannot use 'in' operator to search for 'params' in
+  undefined" — a client-side error that reads like a broken broadcasting server.
+
 ## [0.8.0] — 2026-09-18
 
 ### Added
