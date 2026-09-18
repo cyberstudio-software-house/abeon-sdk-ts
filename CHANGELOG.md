@@ -7,6 +7,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); this package is 
 
 Nothing yet.
 
+## [0.8.3] — 2026-09-18
+
+### Added
+
+- `events/auth.message.requested.json`, synced from `abeon/sdk` 0.6.1 — keeps the schema trees identical,
+  which `sync-schemas:check` and `verify.sh` both assert.
+
 ## [0.8.2] — 2026-09-18
 
 ### Fixed
