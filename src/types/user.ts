@@ -9,4 +9,6 @@ export interface User {
     roles: string[];
     permissions: string[];
     org_id: number | null;
+    /** FR-4. Absent when the producer predates the flag. */
+    email_verified?: boolean;
 }

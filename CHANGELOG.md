@@ -7,6 +7,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); this package is 
 
 Nothing yet.
 
+## [0.8.0] — 2026-09-18
+
+### Added
+
+- Types for transactional messages (`MessageDto`, `MessageRequestedPayload`, `MessageLocale`,
+  `MessageStatus`) and `User.email_verified`, synced from `abeon/sdk` 0.6.0. ADR-0030, FR-4.
+
+### Fixed
+
+- **`useNotifications` no longer shows a notification twice** when the initial fetch and the broadcast
+  race: incoming events are deduplicated by id and update the row in place instead of prepending a
+  second copy under the same React key.
+
 ## [0.7.1] — 2026-09-18
 
 ### Fixed

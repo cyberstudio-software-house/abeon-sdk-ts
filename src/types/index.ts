@@ -18,6 +18,12 @@ export type {
     NotificationPreferences,
 } from './notification.js';
 export type { SearchResult } from './search-result.js';
+export type {
+    MessageDto,
+    MessageLocale,
+    MessageStatus,
+    MessageRequestedPayload,
+} from './message.js';
 export type { UserJwtPayload, ServiceJwtPayload, AbeonJwtPayload } from './jwt.js';
 export type {
     Preferences,

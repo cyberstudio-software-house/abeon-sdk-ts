@@ -95,6 +95,9 @@ export function useNotifications(
         notificationsRef.current = notifications;
     }, [notifications]);
 
+    /** Ids already on screen, for deduplicating broadcasts against the fetched page. */
+    const seenIds = useRef<Set<string>>(new Set());
+
     const refresh = useCallback(async () => {
         if (!user) return;
         setLoading(true);
@@ -105,6 +108,7 @@ export function useNotifications(
                 api.get<{ data: { unread_count: number } }>(unreadCountPath).catch(() => null),
             ]);
             const page = Array.isArray(listResponse?.data) ? listResponse.data : [];
+            seenIds.current = new Set(page.map((n) => n.id));
             setNotifications(page);
 
             // Three sources, in order of how much they know.
@@ -191,8 +195,20 @@ export function useNotifications(
             const notification = extractNotification(payload);
             if (!notification) return;
 
-            setNotifications((prev) => [notification, ...prev]);
-            if (notification.read_at === null) {
+            // The same notification can arrive twice — the initial fetch and the
+            // broadcast race each other — and React then renders two rows under one
+            // key. The set of ids is kept outside state so two events in one tick
+            // still see each other.
+            const known = seenIds.current.has(notification.id);
+            seenIds.current.add(notification.id);
+
+            setNotifications((prev) =>
+                known
+                    ? prev.map((existing) => (existing.id === notification.id ? notification : existing))
+                    : [notification, ...prev],
+            );
+
+            if (!known && notification.read_at === null) {
                 setUnreadCount((c) => c + 1);
             }
         });

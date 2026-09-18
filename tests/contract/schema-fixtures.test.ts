@@ -17,6 +17,7 @@ import addFormats from 'ajv-formats';
 import type { ValidateFunction } from 'ajv';
 import { describe, expect, it } from 'vitest';
 import type {
+    MessageDto,
     NotificationPreferences,
     OrganisationMember,
     Preferences,
@@ -62,6 +63,12 @@ const cases: Case[] = [
     { name: 'Role DTO', schema: 'dto/role.json', fixture: 'role.json' },
     { name: 'Preferences DTO', schema: 'dto/preferences.json', fixture: 'preferences.json' },
     { name: 'Event envelope', schema: 'events/_envelope.json', fixture: 'envelope.json' },
+    {
+        name: 'Message request',
+        schema: 'events/message-requested.json',
+        fixture: 'message-requested.json',
+    },
+    { name: 'Message DTO', schema: 'dto/message.json', fixture: 'message.json' },
     {
         name: 'Notification request',
         schema: 'events/notification-requested.json',
@@ -168,6 +175,43 @@ describe('the exported types match the schemas', () => {
 
         const request = loadJson<Record<string, unknown>>(join(FIXTURES_DIR, 'notification-requested.json'));
         expect(compile('events/notification-requested.json')({ ...request, channels: ['email'] })).toBe(false);
+    });
+
+    it('MessageDto carries every field its schema declares', () => {
+        const message: MessageDto = {
+            id: '018f3c2a-7d51-7c3e-9a4b-2f6c1d8e5a90',
+            template: 'auth.password_reset',
+            to_email: 'anna@acme.pl',
+            locale: 'pl',
+            status: 'queued',
+            error: null,
+            created_at: '2026-09-18T09:15:00+00:00',
+            sent_at: null,
+        };
+
+        expect(compile('dto/message.json')(message)).toBe(true);
+    });
+
+    it('a message names the service that owns its template and carries an idempotency key', () => {
+        const request = loadJson<Record<string, unknown>>(join(FIXTURES_DIR, 'message-requested.json'));
+        const validate = compile('events/message-requested.json');
+
+        expect(validate({ ...request, template: 'invitation' })).toBe(false);
+
+        const withoutKey = { ...request };
+        delete withoutKey.idempotency_key;
+        expect(validate(withoutKey)).toBe(false);
+    });
+
+    it('the user DTO carries the verification flag, and tolerates its absence', () => {
+        const user = loadJson<Record<string, unknown>>(join(FIXTURES_DIR, 'user.json'));
+        const validate = compile('dto/user.json');
+
+        expect(validate(user)).toBe(true);
+        const legacy = { ...user };
+        delete legacy.email_verified;
+        expect(validate(legacy)).toBe(true);
+        expect(validate({ ...user, email_verified: 'yes' })).toBe(false);
     });
 
     it('OrganisationMember carries every field its schema declares', () => {

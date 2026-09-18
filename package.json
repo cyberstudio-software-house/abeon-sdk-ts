@@ -1,6 +1,6 @@
 {
   "name": "@abeon/sdk-ts",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "Shared TypeScript types, helpers, and React hooks for Abeon Unified frontends (Next.js, Laravel + Inertia).",
   "license": "UNLICENSED",
   "private": true,

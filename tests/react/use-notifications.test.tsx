@@ -79,17 +79,21 @@ function fakeEcho(): EchoLike & {
     emit: (event: string, payload: unknown) => void;
     listened: Map<string, (payload: unknown) => void>;
     leftChannels: string[];
+    subscribedChannels: string[];
 } {
     const listened = new Map<string, (payload: unknown) => void>();
     const leftChannels: string[] = [];
+    const subscribedChannels: string[] = [];
     return {
         listened,
         leftChannels,
+        subscribedChannels,
         emit: (event, payload) => {
             const cb = listened.get(event);
             if (cb) cb(payload);
         },
-        private(_channel: string) {
+        private(channel: string) {
+            subscribedChannels.push(channel);
             return {
                 listen(event, callback) {
                     listened.set(event, callback);
@@ -270,6 +274,48 @@ describe('useNotifications', () => {
 
         await waitFor(() => expect(result.current.notifications).toHaveLength(1));
         expect(result.current.notifications[0]?.id).toBe('n3');
+        expect(result.current.unreadCount).toBe(1);
+    });
+
+    it('subscribes to the signed-in user\'s own channel', async () => {
+        const { api } = recordingApi({
+            'GET /api/v1/notifications': { data: [] },
+            'GET /api/v1/notifications/unread-count': { data: { unread_count: 0 } },
+        });
+        const echo = fakeEcho();
+        renderHook(() => useNotifications({ echo, autoLoad: false }), { wrapper: wrap(api) });
+
+        expect(echo.subscribedChannels).toEqual(['user.42']);
+    });
+
+    it('does not show a notification twice when the fetch and the broadcast race', async () => {
+        const arrived: NotificationDto = {
+            id: 'n7',
+            user_id: 42,
+            type: 'crm.deal.assigned',
+            title: 'Przypisano Ci szansę',
+            body: 'Acme',
+            icon: 'briefcase',
+            action_url: '/crm/deals/7',
+            source_app: 'crm',
+            read_at: null,
+            created_at: '2026-09-18T09:00:00.000Z',
+        };
+        const { api } = recordingApi({
+            'GET /api/v1/notifications': { data: [arrived] },
+            'GET /api/v1/notifications/unread-count': { data: { unread_count: 1 } },
+        });
+        const echo = fakeEcho();
+        const { result } = renderHook(() => useNotifications({ echo }), { wrapper: wrap(api) });
+        await waitFor(() => expect(result.current.notifications).toHaveLength(1));
+
+        act(() => {
+            echo.emit('NotificationCreated', arrived);
+            echo.emit('NotificationCreated', { ...arrived, read_at: '2026-09-18T09:01:00.000Z' });
+        });
+
+        expect(result.current.notifications).toHaveLength(1);
+        expect(result.current.notifications[0]?.read_at).toBe('2026-09-18T09:01:00.000Z');
         expect(result.current.unreadCount).toBe(1);
     });
 
