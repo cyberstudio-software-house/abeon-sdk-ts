@@ -39,8 +39,13 @@ export interface UseNotificationsOptions {
      */
     channelName?: string;
     /**
-     * Event name on the private channel. Default `NotificationCreated`
-     * (matches Laravel broadcasting convention).
+     * Event name on the private channel. Default `.NotificationCreated`.
+     *
+     * The leading dot is Echo's "this is the broadcast name, not a class name" marker.
+     * AbeonUnified broadcasts with `broadcastAs('NotificationCreated')` (ADR-0006), so
+     * without the dot Echo listens for `App\Events\NotificationCreated` and the bell
+     * silently never updates — the socket connects, the channel subscribes, nothing
+     * arrives.
      */
     eventName?: string;
     /** Auto-fetch on mount. Default `true`. */
@@ -77,7 +82,7 @@ export function useNotifications(
 
     const fetchPath = options.fetchPath ?? '/api/v1/notifications';
     const unreadCountPath = options.unreadCountPath ?? '/api/v1/notifications/unread-count';
-    const eventName = options.eventName ?? 'NotificationCreated';
+    const eventName = options.eventName ?? '.NotificationCreated';
     const autoLoad = options.autoLoad ?? true;
     const channelName = options.channelName ?? (user ? `user.${user.id}` : null);
 

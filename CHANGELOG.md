@@ -7,6 +7,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); this package is 
 
 Nothing yet.
 
+## [0.8.2] — 2026-09-18
+
+### Fixed
+
+- **`useNotifications` listens for `.NotificationCreated`.** The default lacked Echo's leading dot, so the
+  hook waited for a class-named event while AbeonUnified broadcasts with `broadcastAs` — socket connected,
+  channel subscribed, nothing ever arrived.
+
 ## [0.8.1] — 2026-09-18
 
 ### Fixed

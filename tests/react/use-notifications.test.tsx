@@ -269,7 +269,7 @@ describe('useNotifications', () => {
             created_at: '2026-05-15T11:00:00.000Z',
         };
         act(() => {
-            echo.emit('NotificationCreated', incoming);
+            echo.emit('.NotificationCreated', incoming);
         });
 
         await waitFor(() => expect(result.current.notifications).toHaveLength(1));
@@ -310,13 +310,26 @@ describe('useNotifications', () => {
         await waitFor(() => expect(result.current.notifications).toHaveLength(1));
 
         act(() => {
-            echo.emit('NotificationCreated', arrived);
-            echo.emit('NotificationCreated', { ...arrived, read_at: '2026-09-18T09:01:00.000Z' });
+            echo.emit('.NotificationCreated', arrived);
+            echo.emit('.NotificationCreated', { ...arrived, read_at: '2026-09-18T09:01:00.000Z' });
         });
 
         expect(result.current.notifications).toHaveLength(1);
         expect(result.current.notifications[0]?.read_at).toBe('2026-09-18T09:01:00.000Z');
         expect(result.current.unreadCount).toBe(1);
+    });
+
+    it('listens for the broadcast name, not a class name', async () => {
+        // Without the leading dot Echo waits for `App\Events\NotificationCreated`, and a
+        // service that broadcasts with `broadcastAs` never reaches it (ADR-0006).
+        const { api } = recordingApi({
+            'GET /api/v1/notifications': { data: [] },
+            'GET /api/v1/notifications/unread-count': { data: { unread_count: 0 } },
+        });
+        const echo = fakeEcho();
+        renderHook(() => useNotifications({ echo, autoLoad: false }), { wrapper: wrap(api) });
+
+        expect([...echo.listened.keys()]).toEqual(['.NotificationCreated']);
     });
 
     it('leaves the channel on unmount', async () => {
@@ -349,13 +362,13 @@ describe('useNotifications', () => {
         );
 
         act(() => {
-            echo.emit('NotificationCreated', { id: 'n1' }); // missing title/body/type
+            echo.emit('.NotificationCreated', { id: 'n1' }); // missing title/body/type
         });
         act(() => {
-            echo.emit('NotificationCreated', 'a string payload');
+            echo.emit('.NotificationCreated', 'a string payload');
         });
         act(() => {
-            echo.emit('NotificationCreated', null);
+            echo.emit('.NotificationCreated', null);
         });
         expect(result.current.notifications).toHaveLength(0);
         expect(result.current.unreadCount).toBe(0);
@@ -388,7 +401,7 @@ describe('useNotifications', () => {
             },
         };
         act(() => {
-            echo.emit('NotificationCreated', wrapped);
+            echo.emit('.NotificationCreated', wrapped);
         });
         expect(result.current.notifications).toHaveLength(1);
         expect(result.current.notifications[0]?.id).toBe('n42');
