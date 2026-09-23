@@ -7,6 +7,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); this package is 
 
 Nothing yet.
 
+## [0.11.0] — 2026-09-23
+
+### Added
+
+- Synced schemas for the public surface (ADR-0033): `public_host` on the instance order and the new
+  `unified.app_instance.host_changed` event.
+
 ## [0.10.0] — 2026-09-23
 
 ### Added
