@@ -7,6 +7,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); this package is 
 
 Nothing yet.
 
+## [0.10.0] — 2026-09-23
+
+### Added
+
+- **`status`** on `AppDescriptor` and in the synced schemas (ADR-0031 §5), so the chrome can tell an
+  application that is serving from one whose instance is still being built.
+
 ## [0.9.0] — 2026-09-23
 
 ### Added

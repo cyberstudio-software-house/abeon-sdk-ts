@@ -28,4 +28,10 @@ export interface AppDescriptor {
      * `null` on self-registration — an app cannot know which organisations hold it.
      */
     enabled: boolean | null;
+    /**
+     * The state of this organisation's instance of the application (ADR-0031 §5). Only a
+     * `ready` instance is reachable, so the launcher shows the other states rather than a
+     * link that would 404. Absent where the question does not arise.
+     */
+    status?: 'requested' | 'provisioning' | 'ready' | 'failed' | null;
 }
