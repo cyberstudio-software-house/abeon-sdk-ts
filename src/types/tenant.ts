@@ -16,4 +16,6 @@ export interface Tenant {
     logo_url?: string | null;
     /** True for the organisation the current token is scoped to. Server-populated. */
     current?: boolean | null;
+    /** Where this organisation's applications are served (ADR-0031 §2); the switcher sends the browser here. */
+    host?: string;
 }
