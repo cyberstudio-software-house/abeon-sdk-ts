@@ -81,6 +81,7 @@ const cases: Case[] = [
     },
     { name: 'REST envelope', schema: 'http/envelope.json', fixture: 'envelope-rest.json' },
     { name: 'Problem details', schema: 'http/problem-details.json', fixture: 'problem-details.json' },
+    { name: 'Stored object', schema: 'dto/stored-object.json', fixture: 'stored-object.json' },
     { name: 'User JWT payload', schema: 'auth/jwt-user.json', fixture: 'jwt-user-decoded.json' },
     { name: 'Service JWT payload', schema: 'auth/jwt-service.json', fixture: 'jwt-service-decoded.json' },
 ];
