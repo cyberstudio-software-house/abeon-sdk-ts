@@ -149,7 +149,7 @@ export function Sidebar() {
 }
 ```
 
-Source of truth: PHP `Abeon\SDK\Services\ServiceRegistry::list()` exposed at `/api/v1/auth/apps`, filtered server-side by user permissions.
+Source of truth: AbeonUnified's application registry (ADR-0019), served by `abeon-auth` at `/api/v1/auth/apps` and filtered server-side by user permissions.
 
 ## 8. WebSocket notifications (V5)
 

@@ -27,7 +27,7 @@ public function share(Request $request): array
     return [
         ...parent::share($request),
         'abeon' => fn () => [
-            'user' => abeon_user(),  // null when not authenticated
+            'user' => app(AuthContext::class)->user(),  // null when not authenticated
         ],
     ];
 }
@@ -119,7 +119,7 @@ export function AppSidebar() {
 }
 ```
 
-Backend serves `GET /api/v1/auth/apps` via `Abeon\SDK\Services\ServiceRegistry::list()`. The list is filtered by the current user's permissions.
+Backend serves `GET /api/v1/auth/apps` from `abeon-auth`, which reads the catalogue from AbeonUnified's registry (ADR-0019) and filters it by the current user's permissions.
 
 ## Differences vs Next.js
 
