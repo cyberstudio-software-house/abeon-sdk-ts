@@ -76,10 +76,7 @@ export function createEcho(options: EchoOptions = {}): Echo<'reverb'> {
     const parsed = new URL(wsUrl);
     const wsHost = parsed.hostname;
     const parsedPort = parsed.port ? Number(parsed.port) : parsed.protocol === 'wss:' ? 443 : 80;
-    // H5: ws and wss ports may differ (TLS termination at sidecar/ingress).
-    // Default both to the value parsed from wsUrl, but allow explicit
-    // overrides — otherwise Pusher fails over to ws on a wss-only port
-    // (or vice versa) and silently never connects.
+    // H5: ws and wss ports may differ; see docs/notes/echo-client.md.
     const wsPort = options.wsPort ?? parsedPort;
     const wssPort = options.wssPort ?? parsedPort;
     const forceTLS = options.forceTLS ?? parsed.protocol === 'wss:';
@@ -90,10 +87,7 @@ export function createEcho(options: EchoOptions = {}): Echo<'reverb'> {
             ? ''
             : (options.authEndpoint ?? `${basePath.replace(/\/$/, '')}/broadcasting/auth`);
 
-    // H3: install Pusher on window only when missing. Overwriting silently
-    // breaks apps that vendor their own Pusher instance (e.g. when two
-    // bundles co-exist during a phased deploy, or when an app uses
-    // pusher-js for non-Reverb use cases alongside Reverb).
+    // H3: install Pusher on window only when missing; see docs/notes/echo-client.md.
     if (typeof window !== 'undefined') {
         const w = window as unknown as { Pusher?: typeof Pusher };
         if (!w.Pusher) {
@@ -110,9 +104,7 @@ export function createEcho(options: EchoOptions = {}): Echo<'reverb'> {
         forceTLS,
         enabledTransports: ['ws', 'wss'],
         authEndpoint,
-        // Omitted rather than set to `undefined`: pusher-js reads `auth.params` without
-        // checking, so passing the key with no value fails the first subscription with
-        // "Cannot use 'in' operator to search for 'params' in undefined".
+        // Omitted rather than set to `undefined`; see docs/notes/echo-client.md.
         ...(options.authHeaders ? { auth: { headers: options.authHeaders } } : {}),
         ...(options.cluster ? { cluster: options.cluster } : {}),
     });

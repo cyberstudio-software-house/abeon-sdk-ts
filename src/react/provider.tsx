@@ -56,25 +56,17 @@ export function AbeonProvider({
     initialPreferences,
     apiClient,
 }: AbeonProviderProps): ReactNode {
-    // M6: validate initialAuth shape at the entry point. Most callers pass
-    // the result of `getServerAuthContext()` directly — but a typo, an old
-    // SSR helper, or hydration from a stale cache may yield something that
-    // type-checks `User` only by structural coincidence. Bad shape → render
-    // as anonymous rather than crash a deep child accessing `user.roles`.
+    // M6: validate initialAuth shape at the entry point; see docs/notes/react-provider.md.
     const validatedInitial = isValidUser(initialAuth?.user) ? initialAuth!.user! : null;
     const [user, setUser] = useState<User | null>(validatedInitial);
 
-    // C1: stable apiClient reference — recreates only when caller swaps the
-    // `apiClient` prop, not when `user` changes. Otherwise every `setUser`
-    // would mint a fresh client, busting downstream `useEffect([api,...])`.
+    // C1: stable apiClient reference; see docs/notes/react-provider.md.
     const stableApiClient = useMemo<ApiClient>(
         () => apiClient ?? createApiClient(),
         [apiClient],
     );
 
-    // Invalidation signal for tenant-scoped state (ADR-0017). A counter rather
-    // than an event emitter: it composes with React's own dependency tracking, so
-    // a hook opts in by listing it, and nothing needs to subscribe or unsubscribe.
+    // Invalidation signal for tenant-scoped state (ADR-0017); see docs/notes/react-provider.md.
     const [tenantEpoch, setTenantEpoch] = useState(0);
     const onTenantSwitched = useCallback(() => setTenantEpoch((n) => n + 1), []);
 
@@ -83,10 +75,8 @@ export function AbeonProvider({
         [user, stableApiClient, tenantEpoch, onTenantSwitched],
     );
 
-    // Mount PreferencesProvider here so every `usePreferences()` (and
-    // `usePinnedItems()`) call inside the tree returns the SAME state instance.
-    // A single PATCH then propagates instantly to every consumer (sidebar,
-    // settings page, theme toggle, etc.) without anyone needing to re-fetch.
+    // Mounted here so the whole tree shares one preferences state;
+    // see docs/notes/react-provider.md.
     return (
         <AbeonContext.Provider value={value}>
             <PreferencesProvider initialPreferences={initialPreferences}>{children}</PreferencesProvider>
